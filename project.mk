@@ -21,7 +21,7 @@
 # Package version
 ARTIFACT_ID                 = LSP_PLUGINS_LOUD_COMP
 ARTIFACT_NAME               = lsp-plugins-loud-comp
-ARTIFACT_DESC               = Trigger plugin series
+ARTIFACT_DESC               = Loudness Compensator plugin series
 ARTIFACT_HEADERS            = lsp-plug.in
 ARTIFACT_EXPORT_ALL         = 1
 ARTIFACT_VERSION            = 1.0.1-devel
