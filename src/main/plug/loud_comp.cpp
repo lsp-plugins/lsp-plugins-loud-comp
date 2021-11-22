@@ -103,10 +103,10 @@ namespace lsp
             destroy();
         }
 
-        void loud_comp::init(plug::IWrapper *wrapper)
+        void loud_comp::init(plug::IWrapper *wrapper, plug::IPort **ports)
         {
             // Pass wrapper
-            plug::Module::init(wrapper);
+            plug::Module::init(wrapper, ports);
 
             // Initialize oscillator
             if (!sOsc.init())
@@ -203,60 +203,60 @@ namespace lsp
             // Bind input audio ports
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(vPorts[port_id]);
-                vChannels[i]->pIn   = vPorts[port_id++];
+                TRACE_PORT(ports[port_id]);
+                vChannels[i]->pIn   = ports[port_id++];
             }
 
             // Bind output audio ports
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(vPorts[port_id]);
-                vChannels[i]->pOut  = vPorts[port_id++];
+                TRACE_PORT(ports[port_id]);
+                vChannels[i]->pOut  = ports[port_id++];
             }
 
             // Bind common ports
-            TRACE_PORT(vPorts[port_id]);
-            pBypass             = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pGain               = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pMode               = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pRank               = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pVolume             = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pReference          = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pHClipOn            = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pHClipRange         = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pHClipReset         = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pMesh               = vPorts[port_id++];
-            TRACE_PORT(vPorts[port_id]);
-            pRelative           = vPorts[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pBypass             = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pGain               = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pMode               = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pRank               = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pVolume             = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pReference          = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pHClipOn            = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pHClipRange         = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pHClipReset         = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pMesh               = ports[port_id++];
+            TRACE_PORT(ports[port_id]);
+            pRelative           = ports[port_id++];
 
             // Bind input level meters
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(vPorts[port_id]);
-                vChannels[i]->pMeterIn  = vPorts[port_id++];
+                TRACE_PORT(ports[port_id]);
+                vChannels[i]->pMeterIn  = ports[port_id++];
             }
 
             // Bind hard clip indicators
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(vPorts[port_id]);
-                vChannels[i]->pHClipInd = vPorts[port_id++];
+                TRACE_PORT(ports[port_id]);
+                vChannels[i]->pHClipInd = ports[port_id++];
             }
 
             // Bind output level meters
             for (size_t i=0; i<nChannels; ++i)
             {
-                TRACE_PORT(vPorts[port_id]);
-                vChannels[i]->pMeterOut = vPorts[port_id++];
+                TRACE_PORT(ports[port_id]);
+                vChannels[i]->pMeterOut = ports[port_id++];
             }
         }
 
