@@ -98,7 +98,16 @@ namespace lsp
             PORTS_END
         };
 
-        // Multiband gate
+        const meta::bundle_t loud_comp_bundle =
+        {
+            "loud_comp",
+            "Loudness Compensator",
+            B_UTILITIES,
+            "CuySiF1VSj8",
+            "This plugin applies equal loudness contour corrections defined by ISO 226:2003\nstandard to the input signal depending on the output volume settings.\nAdditionally it can provide ear protection by applying hard-clipping to the\noutput signal if it exceeds the allowed configurable level."
+        };
+
+        // Loudness Compensator
         const meta::plugin_t  loud_comp_mono =
         {
             "Lautstärke Kompensator Mono",
@@ -117,7 +126,8 @@ namespace lsp
             loud_comp_mono_ports,
             "util/loud_comp.xml",
             NULL,
-            mono_plugin_port_groups
+            mono_plugin_port_groups,
+            &loud_comp_bundle
         };
 
         const meta::plugin_t  loud_comp_stereo =
@@ -138,7 +148,8 @@ namespace lsp
             loud_comp_stereo_ports,
             "util/loud_comp.xml",
             NULL,
-            stereo_plugin_port_groups
+            stereo_plugin_port_groups,
+            &loud_comp_bundle
         };
     } // namespace meta
 } // namespace lsp
