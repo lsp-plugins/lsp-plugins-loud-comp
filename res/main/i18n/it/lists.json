@@ -1,0 +1,11 @@
+{
+	"lcomp": {
+		"curve": {
+			"flat": "Piatto",
+			"fm": "Fletcher-Munson",
+			"iso226": "ISO 226:2003",
+			"rd": "Robinson-Dadson"
+		}
+	}
+}
+
