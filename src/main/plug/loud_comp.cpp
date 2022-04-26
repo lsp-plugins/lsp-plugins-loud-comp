@@ -585,7 +585,7 @@ namespace lsp
                 else
                     dsp::copy(mesh->pvData[1], vAmpMesh, meta::loud_comp_metadata::CURVE_MESH_SIZE);
                 mesh->data(2, meta::loud_comp_metadata::CURVE_MESH_SIZE);
-                bSyncMesh   = NULL;
+                bSyncMesh   = false;
             }
         }
 
