@@ -24,7 +24,7 @@ ARTIFACT_NAME               = lsp-plugins-loud-comp
 ARTIFACT_TYPE               = plug
 ARTIFACT_DESC               = LSP Loudness Compensator Plugin Series
 ARTIFACT_HEADERS            = lsp-plug.in
-ARTIFACT_VERSION            = 1.0.4-devel
+ARTIFACT_VERSION            = 1.0.4
 
 
 
