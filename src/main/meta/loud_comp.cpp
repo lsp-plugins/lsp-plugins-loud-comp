@@ -38,7 +38,9 @@ namespace lsp
 {
     namespace meta
     {
-        static const int loud_comp_classes[] = { C_AMPLIFIER, -1 };
+        static const int plugin_classes[]           = { C_AMPLIFIER, -1 };
+        static const int clap_features_mono[]       = { CF_AUDIO_EFFECT, CF_UTILITY, CF_MONO, -1 };
+        static const int clap_features_stereo[]     = { CF_AUDIO_EFFECT, CF_UTILITY, CF_STEREO, -1 };
 
         static const port_item_t loud_comp_fft_rank[] =
         {
@@ -120,8 +122,10 @@ namespace lsp
             "eno9",
             LSP_LADSPA_LOUD_COMP_BASE + 1,
             LSP_LADSPA_URI("loud_comp_mono"),
+            LSP_CLAP_URI("loud_comp_mono"),
             LSP_PLUGINS_LOUD_COMP_VERSION,
-            loud_comp_classes,
+            plugin_classes,
+            clap_features_mono,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_mono_ports,
             "util/loud_comp.xml",
@@ -142,8 +146,10 @@ namespace lsp
             "wva0",
             LSP_LADSPA_LOUD_COMP_BASE + 1,
             LSP_LADSPA_URI("loud_comp_stereo"),
+            LSP_CLAP_URI("loud_comp_stereo"),
             LSP_PLUGINS_LOUD_COMP_VERSION,
-            loud_comp_classes,
+            plugin_classes,
+            clap_features_stereo,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_stereo_ports,
             "util/loud_comp.xml",
