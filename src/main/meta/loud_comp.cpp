@@ -120,7 +120,7 @@ namespace lsp
             LSP_LV2_URI("loud_comp_mono"),
             LSP_LV2UI_URI("loud_comp_mono"),
             "eno9",
-            LSP_LADSPA_LOUD_COMP_BASE + 1,
+            LSP_LADSPA_LOUD_COMP_BASE + 0,
             LSP_LADSPA_URI("loud_comp_mono"),
             LSP_CLAP_URI("loud_comp_mono"),
             LSP_PLUGINS_LOUD_COMP_VERSION,
