@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -34,12 +34,16 @@
 #define BUF_SIZE            0x1000
 #define NUM_CURVES          (sizeof(freq_curves)/sizeof(freq_curve_t *))
 
-#define TRACE_PORT(p)       lsp_trace("  port id=%s", (p)->metadata()->id);
-
 namespace lsp
 {
     namespace plugins
     {
+        static plug::IPort *TRACE_PORT(plug::IPort *p)
+        {
+            lsp_trace("  port id=%s", (p)->metadata()->id);
+            return p;
+        }
+
         static const freq_curve_t *freq_curves[]=
         {
             &iso226_2003_curve,
@@ -101,7 +105,7 @@ namespace lsp
 
         loud_comp::~loud_comp()
         {
-            destroy();
+            do_destroy();
         }
 
         void loud_comp::init(plug::IWrapper *wrapper, plug::IPort **ports)
@@ -203,65 +207,45 @@ namespace lsp
 
             // Bind input audio ports
             for (size_t i=0; i<nChannels; ++i)
-            {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i]->pIn   = ports[port_id++];
-            }
+                vChannels[i]->pIn   = TRACE_PORT(ports[port_id++]);
 
             // Bind output audio ports
             for (size_t i=0; i<nChannels; ++i)
-            {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i]->pOut  = ports[port_id++];
-            }
+                vChannels[i]->pOut  = TRACE_PORT(ports[port_id++]);
 
             // Bind common ports
-            TRACE_PORT(ports[port_id]);
-            pBypass             = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pGain               = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMode               = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pRank               = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pVolume             = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pReference          = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pHClipOn            = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pHClipRange         = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pHClipReset         = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pMesh               = ports[port_id++];
-            TRACE_PORT(ports[port_id]);
-            pRelative           = ports[port_id++];
+            pBypass             = TRACE_PORT(ports[port_id++]);
+            pGain               = TRACE_PORT(ports[port_id++]);
+            pMode               = TRACE_PORT(ports[port_id++]);
+            pRank               = TRACE_PORT(ports[port_id++]);
+            pVolume             = TRACE_PORT(ports[port_id++]);
+            pReference          = TRACE_PORT(ports[port_id++]);
+            pHClipOn            = TRACE_PORT(ports[port_id++]);
+            pHClipRange         = TRACE_PORT(ports[port_id++]);
+            pHClipReset         = TRACE_PORT(ports[port_id++]);
+            pMesh               = TRACE_PORT(ports[port_id++]);
+            pRelative           = TRACE_PORT(ports[port_id++]);
 
             // Bind input level meters
             for (size_t i=0; i<nChannels; ++i)
-            {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i]->pMeterIn  = ports[port_id++];
-            }
+                vChannels[i]->pMeterIn  = TRACE_PORT(ports[port_id++]);
 
             // Bind hard clip indicators
             for (size_t i=0; i<nChannels; ++i)
-            {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i]->pHClipInd = ports[port_id++];
-            }
+                vChannels[i]->pHClipInd = TRACE_PORT(ports[port_id++]);
 
             // Bind output level meters
             for (size_t i=0; i<nChannels; ++i)
-            {
-                TRACE_PORT(ports[port_id]);
-                vChannels[i]->pMeterOut = ports[port_id++];
-            }
+                vChannels[i]->pMeterOut = TRACE_PORT(ports[port_id++]);
         }
 
         void loud_comp::destroy()
+        {
+            plug::Module::destroy();
+            do_destroy();
+        }
+
+        void loud_comp::do_destroy()
         {
             sOsc.destroy();
 
@@ -792,7 +776,7 @@ namespace lsp
             v->write("pHClipRange", pHClipRange);
             v->write("pHClipReset", pHClipReset);
         }
-    } // namespace plugins
-} // namespace lsp
+    } /* namespace plugins */
+} /* namespace lsp */
 
 
