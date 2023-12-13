@@ -114,6 +114,7 @@ namespace lsp
         {
             "Lautstärke Kompensator Mono",
             "Loudness Compensator Mono",
+            "Loudness Compensator Mono",
             "LK1M",
             &developers::v_sadovnikov,
             "loud_comp_mono",
@@ -137,6 +138,7 @@ namespace lsp
         const meta::plugin_t  loud_comp_stereo =
         {
             "Lautstärke Kompensator Stereo",
+            "Loudness Compensator Stereo",
             "Loudness Compensator Stereo",
             "LK1S",
             &developers::v_sadovnikov,
