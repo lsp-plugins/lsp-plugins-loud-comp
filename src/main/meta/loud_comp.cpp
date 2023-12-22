@@ -25,7 +25,7 @@
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MAJOR       1
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MINOR       0
-#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       15
+#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       16
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION  \
     LSP_MODULE_VERSION( \
@@ -114,6 +114,7 @@ namespace lsp
         {
             "Lautstärke Kompensator Mono",
             "Loudness Compensator Mono",
+            "Loudness Compensator Mono",
             "LK1M",
             &developers::v_sadovnikov,
             "loud_comp_mono",
@@ -137,6 +138,7 @@ namespace lsp
         const meta::plugin_t  loud_comp_stereo =
         {
             "Lautstärke Kompensator Stereo",
+            "Loudness Compensator Stereo",
             "Loudness Compensator Stereo",
             "LK1S",
             &developers::v_sadovnikov,
