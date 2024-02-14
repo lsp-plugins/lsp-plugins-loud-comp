@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2021 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -121,6 +121,8 @@ namespace lsp
             LSP_LV2_URI("loud_comp_mono"),
             LSP_LV2UI_URI("loud_comp_mono"),
             "eno9",
+            LSP_VST3_UID("lk1m    eno9"),
+            LSP_VST3UI_UID("lk1m    eno9"),
             LSP_LADSPA_LOUD_COMP_BASE + 0,
             LSP_LADSPA_URI("loud_comp_mono"),
             LSP_CLAP_URI("loud_comp_mono"),
@@ -146,6 +148,8 @@ namespace lsp
             LSP_LV2_URI("loud_comp_stereo"),
             LSP_LV2UI_URI("loud_comp_stereo"),
             "wva0",
+            LSP_VST3_UID("lk1s    wva0"),
+            LSP_VST3UI_UID("lk1s    wva0"),
             LSP_LADSPA_LOUD_COMP_BASE + 1,
             LSP_LADSPA_URI("loud_comp_stereo"),
             LSP_CLAP_URI("loud_comp_stereo"),
