@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -30,6 +30,7 @@
 #include <generated/iso226/fletcher_munson.h>
 #include <generated/iso226/robinson_dadson.h>
 #include <generated/iso226/iso226-2003.h>
+#include <generated/iso226/iso226-2023.h>
 
 #define BUF_SIZE            0x1000
 #define NUM_CURVES          (sizeof(freq_curves)/sizeof(freq_curve_t *))
@@ -48,7 +49,8 @@ namespace lsp
         {
             &iso226_2003_curve,
             &fletcher_munson_curve,
-            &robinson_dadson_curve
+            &robinson_dadson_curve,
+            &iso226_2023_curve,
         };
 
         //-------------------------------------------------------------------------

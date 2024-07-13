@@ -60,6 +60,7 @@ namespace lsp
             { "ISO226-2003",        "lcomp.curve.iso226" },
             { "Fletcher-Munson",    "lcomp.curve.fm" },
             { "Robinson-Dadson",    "lcomp.curve.rd" },
+            { "ISO226-2023",        "lcomp.curve.iso226_2023" },
             { NULL, NULL }
         };
 
