@@ -33,7 +33,7 @@
 #define SPL_MIN     -10.0f
 #define SPL_MAX     130.8f
 
-static const float PHONS[]      = { 90, 80, 70, 60, 40, 30, 20, 10, 0 };
+static const float PHONS[]      = { 80, 70, 60, 50, 40, 30, 20, 10, 0 };
 static const uint32_t COLORS[]  = { 0xff8080, 0xff7070, 0xff6060, 0xff5050, 0xff4040, 0xff3030, 0xff2020, 0xff1010, 0xff0000 };
 static const uint32_t INT_COLORS[] =
 {
@@ -421,7 +421,7 @@ void draw_values(png_data_t *data, const float *values, uint32_t color, size_t x
             continue;
 
         put_pixel(data, x, y, color);
-        printf("x = %d, y = %d\n", int(x), int(y));
+        printf("draw x = %d, y = %d\n", int(x), int(y));
     }
 }
 
@@ -439,7 +439,7 @@ void read_values(png_data_t *data, uint32_t color, float *out, ssize_t *xmin, ss
             if (check_pixel(data, x, y, color))
             {
                 out[x] = read_value(data, color, x, y);
-                printf("x = %d, v = %f\n", int(x), out[x]);
+                printf("read x = %d, v = %f\n", int(x), out[x]);
 
                 if (*xmin < 0)
                     *xmin = x;
@@ -542,18 +542,18 @@ void build_interpolated_curves(el_curves_t *d, const el_curves_t *s)
 
     // Generate 90 to 0 phon curves
     size_t i=0;
-    cubic_interpolate(d->curves[i++], s->curves[1], s->curves[2], 90, 80, 70, s->width); // 90
-    cubic_interpolate(d->curves[i++], s->curves[1], s->curves[2], 80, 80, 70, s->width); // 80
+    cubic_interpolate(d->curves[i++], s->curves[0], s->curves[1], 90, 80, 70, s->width); // 90
+    cubic_interpolate(d->curves[i++], s->curves[0], s->curves[1], 80, 80, 70, s->width); // 80
     cubic_interpolate(d->curves[i++], s->curves[1], s->curves[2], 70, 70, 60, s->width); // 70
     cubic_interpolate(d->curves[i++], s->curves[2], s->curves[3], 60, 60, 50, s->width); // 60
-    cubic_interpolate(d->curves[i++], s->curves[2], s->curves[3], 50, 50, 40, s->width); // 50
-    cubic_interpolate(d->curves[i++], s->curves[3], s->curves[4], 40, 40, 30, s->width); // 40
-    cubic_interpolate(d->curves[i++], s->curves[3], s->curves[4], 30, 30, 20, s->width); // 30
-    cubic_interpolate(d->curves[i++], s->curves[4], s->curves[5], 20, 20, 10, s->width); // 20
-    cubic_interpolate(d->curves[i++], s->curves[4], s->curves[5], 10, 10,  0, s->width); // 10
-    cubic_interpolate(d->curves[i++], s->curves[4], s->curves[5],  0, 10,  0, s->width); // 0
+    cubic_interpolate(d->curves[i++], s->curves[3], s->curves[4], 50, 50, 40, s->width); // 50
+    cubic_interpolate(d->curves[i++], s->curves[4], s->curves[5], 40, 40, 30, s->width); // 40
+    cubic_interpolate(d->curves[i++], s->curves[5], s->curves[6], 30, 30, 20, s->width); // 30
+    cubic_interpolate(d->curves[i++], s->curves[6], s->curves[7], 20, 20, 10, s->width); // 20
+    cubic_interpolate(d->curves[i++], s->curves[7], s->curves[8], 10, 10,  0, s->width); // 10
+    cubic_interpolate(d->curves[i++], s->curves[7], s->curves[8],  0, 10,  0, s->width); // 0
 
-    cubic_interpolate(d->curves[i++], s->curves[1], s->curves[2], 83, 80, 70, s->width); // 83
+    cubic_interpolate(d->curves[i++], s->curves[0], s->curves[1], 83, 80, 70, s->width); // 83
 }
 
 double logfx(float x, const el_curves_t *s)
