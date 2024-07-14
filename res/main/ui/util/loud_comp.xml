@@ -59,7 +59,7 @@
 				<group ui:inject="GraphGroup" ipadding="0" expand="true" fill="true" text="labels.graphs.frequency">
 					<vbox expand="true">
 						<graph width.min="340" height.min="176" expand="true" visibility=":relspec ieq 0">
-							<origin hpos="-1" vpos="-1" visible="false"/>
+							<origin hpos="-1" vpos="-1" visible="false" />
 			
 							<!-- Gray grid -->
 							<ui:with ox="0" oy="1" color="graph_alt_1">
@@ -87,7 +87,14 @@
 								<marker v="-72 db"/>
 							</ui:with>
 			
-							<marker value="db :volume" color="green" ox="1" oy="0" /> 	  <!-- 0 dB -->
+							<marker id="volume" ox="3" oy="0"
+								editable="true" pointer="vsize"
+								width="3"
+								color="green" hcolor="green"
+								rcolor="green" hrcolor="green" 
+								rborder="50" hrborder="50"
+								color.a="0.1" hcolor.a="0.0"
+								rcolor.a="0.8" hrcolor.a="0.6" />
 			
 							<!-- Meshes -->
 							<mesh id="spec" width="3" color="graph_mesh" />
@@ -100,8 +107,8 @@
 							<!-- Axis -->
 							<axis min="10" max="24000" color="graph_prim" angle="0.0" log="true" visibility="false"/>
 							<axis min="-96 db" max="12 db" color="graph_prim" angle="0.5" log="true" visibility="false"/>
-							<!-- -72..+24 dB -->
 							<axis min="-1" max="1" visible="false" angle="0.5"/>
+							<axis min="-96" max="12" zero="-96" visible="false" log="false" angle="0.5"/>
 			
 							<!-- Marker -->
 							<marker id="freq" color="red" ox="0" oy="1" />

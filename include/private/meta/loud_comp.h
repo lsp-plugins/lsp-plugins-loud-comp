@@ -48,7 +48,7 @@ namespace lsp
             static constexpr size_t FFT_RANK_MAX        = 14;
             static constexpr size_t FFT_RANK_IDX_DFL    = 4;
 
-            static constexpr size_t STD_DFL             = 1;
+            static constexpr size_t STD_DFL             = 4;
 
             static constexpr size_t CURVE_MESH_SIZE     = 512;
         };
