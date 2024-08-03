@@ -25,7 +25,7 @@
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MAJOR       1
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MINOR       0
-#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       19
+#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       20
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION  \
     LSP_MODULE_VERSION( \
@@ -60,6 +60,7 @@ namespace lsp
             { "ISO226-2003",        "lcomp.curve.iso226" },
             { "Fletcher-Munson",    "lcomp.curve.fm" },
             { "Robinson-Dadson",    "lcomp.curve.rd" },
+            { "ISO226-2023",        "lcomp.curve.iso226_2023" },
             { NULL, NULL }
         };
 
@@ -118,14 +119,17 @@ namespace lsp
             "LK1M",
             &developers::v_sadovnikov,
             "loud_comp_mono",
-            LSP_LV2_URI("loud_comp_mono"),
-            LSP_LV2UI_URI("loud_comp_mono"),
-            "eno9",
-            LSP_VST3_UID("lk1m    eno9"),
-            LSP_VST3UI_UID("lk1m    eno9"),
-            LSP_LADSPA_LOUD_COMP_BASE + 0,
-            LSP_LADSPA_URI("loud_comp_mono"),
-            LSP_CLAP_URI("loud_comp_mono"),
+            {
+                LSP_LV2_URI("loud_comp_mono"),
+                LSP_LV2UI_URI("loud_comp_mono"),
+                "eno9",
+                LSP_VST3_UID("lk1m    eno9"),
+                LSP_VST3UI_UID("lk1m    eno9"),
+                LSP_LADSPA_LOUD_COMP_BASE + 0,
+                LSP_LADSPA_URI("loud_comp_mono"),
+                LSP_CLAP_URI("loud_comp_mono"),
+                LSP_GST_UID("loud_comp_mono"),
+            },
             LSP_PLUGINS_LOUD_COMP_VERSION,
             plugin_classes,
             clap_features_mono,
@@ -145,14 +149,17 @@ namespace lsp
             "LK1S",
             &developers::v_sadovnikov,
             "loud_comp_stereo",
-            LSP_LV2_URI("loud_comp_stereo"),
-            LSP_LV2UI_URI("loud_comp_stereo"),
-            "wva0",
-            LSP_VST3_UID("lk1s    wva0"),
-            LSP_VST3UI_UID("lk1s    wva0"),
-            LSP_LADSPA_LOUD_COMP_BASE + 1,
-            LSP_LADSPA_URI("loud_comp_stereo"),
-            LSP_CLAP_URI("loud_comp_stereo"),
+            {
+                LSP_LV2_URI("loud_comp_stereo"),
+                LSP_LV2UI_URI("loud_comp_stereo"),
+                "wva0",
+                LSP_VST3_UID("lk1s    wva0"),
+                LSP_VST3UI_UID("lk1s    wva0"),
+                LSP_LADSPA_LOUD_COMP_BASE + 1,
+                LSP_LADSPA_URI("loud_comp_stereo"),
+                LSP_CLAP_URI("loud_comp_stereo"),
+                LSP_GST_UID("loud_comp_stereo"),
+            },
             LSP_PLUGINS_LOUD_COMP_VERSION,
             plugin_classes,
             clap_features_stereo,

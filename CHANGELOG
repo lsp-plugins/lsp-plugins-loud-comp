@@ -2,6 +2,11 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.20 ===
+* Added ISO-226:2023 loudness correction curves.
+* Volume is now editable on graph.
+* Updated build scripts and dependencies.
+
 === 1.0.19 ===
 * Updated build scripts and dependencies.
 
