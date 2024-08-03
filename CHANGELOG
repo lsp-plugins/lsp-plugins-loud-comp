@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.21 ===
+
+
 === 1.0.20 ===
 * Added ISO-226:2023 loudness correction curves.
 * Volume is now editable on graph.
