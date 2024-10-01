@@ -26,6 +26,7 @@
 #include <lsp-plug.in/plug-fw/core/IDBuffer.h>
 #include <lsp-plug.in/dsp-units/ctl/Blink.h>
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
+#include <lsp-plug.in/dsp-units/meters/LoudnessMeter.h>
 #include <lsp-plug.in/dsp-units/util/Delay.h>
 #include <lsp-plug.in/dsp-units/util/Oscillator.h>
 #include <lsp-plug.in/dsp-units/util/SpectralProcessor.h>
@@ -70,13 +71,15 @@ namespace lsp
                 size_t                  nRank;          // Current FFT rank
                 float                   fGain;          // Input gain
                 float                   fVolume;        // Volume
+                float                   fInLufs;        // Input LUFS
+                float                   fOutLufs;       // Output LUFS
                 bool                    bBypass;        // Bypass
                 bool                    bRelative;      // Display relative curve instead of absolute
                 bool                    bReference;     // Reference generator
                 bool                    bHClipOn;       // Enable hard-clipping
                 float                   fHClipLvl;      // Hard-clip threshold
                 channel_t              *vChannels[2];   // Audio channels
-                float                  *vTmpBuf;        // Temporary buffer for interpolating curve characteristics
+                float                  *vTmpBuf;        // Temporary buffer for processing
                 float                  *vFreqApply;     // Frequency response applied to the output signal
                 float                  *vFreqMesh;      // List of frequencies for the mesh
                 float                  *vAmpMesh;       // List of amplitudes for the mesh
@@ -84,6 +87,8 @@ namespace lsp
                 core::IDBuffer         *pIDisplay;      // Inline display buffer
 
                 dspu::Oscillator        sOsc;           // Oscillator for reference sound
+                dspu::LoudnessMeter     sInMeter;       // Input loudness meter
+                dspu::LoudnessMeter     sOutMeter;      // Output loudness meter
 
                 uint8_t                *pData;          // Allocation data
 
@@ -94,6 +99,8 @@ namespace lsp
                 plug::IPort            *pVolume;        // Output volume
                 plug::IPort            *pMesh;          // Output mesh response
                 plug::IPort            *pRelative;      // Relative mesh display
+                plug::IPort            *pLufsIn;        // Input LUFS meter
+                plug::IPort            *pLufsOut;       // Output LUFS meter
                 plug::IPort            *pReference;     // Enable reference sine generator
                 plug::IPort            *pHClipOn;       // Enable Hard clip
                 plug::IPort            *pHClipRange;    // Hard clipping range

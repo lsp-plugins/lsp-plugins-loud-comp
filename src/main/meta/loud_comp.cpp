@@ -74,7 +74,9 @@ namespace lsp
             CONTROL("hcrange", "Hard-clipping range", U_DB, loud_comp_metadata::HCRANGE), \
             TRIGGER("hcclean", "Clean hard-clipping indicators"), \
             MESH("spec", "Level compensation frequency graph", 2, loud_comp_metadata::CURVE_MESH_SIZE), \
-            SWITCH("relspec", "Equalization curve is shown relative to the volume", 0.0f)
+            SWITCH("relspec", "Equalization curve is shown relative to the volume", 0.0f), \
+            LUFS_METER("lufs_il", "Input signal LUFS", 24.0f), \
+            LUFS_METER("lufs_ol", "Input signal LUFS", 24.0f)
 
         static const port_t loud_comp_mono_ports[] =
         {

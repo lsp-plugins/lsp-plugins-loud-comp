@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.21 ===
+* Added LUFS meters for input and output audio signal.
 * Updated build scripts and dependencies.
 
 === 1.0.20 ===
