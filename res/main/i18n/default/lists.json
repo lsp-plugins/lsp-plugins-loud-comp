@@ -6,6 +6,15 @@
 			"iso226": "ISO 226:2003",
 			"iso226_2023": "ISO 226:2023",
 			"rd": "Robinson-Dadson"
+		},
+		"gen": {
+			"pink_12": "Pink Noise @ -12 LUFS",
+			"pink_14": "Pink Noise @ -14 LUFS",
+			"pink_16": "Pink Noise @ -16 LUFS",
+			"pink_18": "Pink Noise @ -18 LUFS",
+			"pink_20": "Pink Noise @ -20 LUFS",
+			"pink_23": "Pink Noise @ -23 LUFS",
+            "sine_1khz": "Sine @ 1kHz 0 dB"
 		}
 	}
 }

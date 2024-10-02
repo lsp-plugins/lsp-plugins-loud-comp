@@ -74,6 +74,7 @@ namespace lsp
             fVolume         = -1.0f;
             fInLufs         = GAIN_AMP_M_INF_DB;
             fOutLufs        = GAIN_AMP_M_INF_DB;
+            enGenerator     = GEN_PINK_M20LUFS;
             bBypass         = false;
             bRelative       = false;
             bReference      = false;
@@ -97,6 +98,7 @@ namespace lsp
             pMesh           = NULL;
             pRelative       = NULL;
             pReference      = NULL;
+            pGenerator      = NULL;
             pLufsIn         = NULL;
             pLufsOut        = NULL;
             pHClipOn        = NULL;
@@ -125,6 +127,11 @@ namespace lsp
             sOsc.set_oversampler_mode(dspu::OM_NONE);
             sOsc.set_phase(0.0f);
             sOsc.set_function(dspu::FG_SINE);
+
+            sNoise.init();
+            sNoise.set_generator(dspu::NG_GEN_LCG);
+            sNoise.set_lcg_distribution(dspu::LCG_UNIFORM);
+            sNoise.set_noise_color(dspu::NG_COLOR_PINK);
 
             // Initialize loudness meters
             if (sInMeter.init(nChannels) != STATUS_OK)
@@ -222,6 +229,7 @@ namespace lsp
             BIND_PORT(pRank);
             BIND_PORT(pVolume);
             BIND_PORT(pReference);
+            BIND_PORT(pGenerator);
             BIND_PORT(pHClipOn);
             BIND_PORT(pHClipRange);
             BIND_PORT(pHClipReset);
@@ -292,6 +300,7 @@ namespace lsp
         void loud_comp::update_sample_rate(long sr)
         {
             sOsc.set_sample_rate(sr);
+            sNoise.set_sample_rate(sr);
             sInMeter.set_sample_rate(sr);
             sOutMeter.set_sample_rate(sr);
 
@@ -305,6 +314,39 @@ namespace lsp
             }
         }
 
+        loud_comp::generator_t loud_comp::decode_generator(size_t generator)
+        {
+            switch (generator)
+            {
+                case 0: return GEN_SINE;
+                case 1: return GEN_PINK_M23LUFS;
+                case 2: return GEN_PINK_M20LUFS;
+                case 3: return GEN_PINK_M18LUFS;
+                case 4: return GEN_PINK_M16LUFS;
+                case 5: return GEN_PINK_M14LUFS;
+                case 6: return GEN_PINK_M12LUFS;
+                default: break;
+            }
+            return GEN_SINE;
+        }
+
+        float loud_comp::get_generator_amplitude(generator_t gen, bool stereo)
+        {
+            const float base = (stereo) ? GAIN_AMP_0_DB : GAIN_AMP_P_3_DB;
+
+            switch (gen)
+            {
+                case GEN_PINK_M23LUFS: return base * GAIN_AMP_0_DB;
+                case GEN_PINK_M20LUFS: return base * GAIN_AMP_P_3_DB;
+                case GEN_PINK_M18LUFS: return base * GAIN_AMP_P_5_DB;
+                case GEN_PINK_M16LUFS: return base * GAIN_AMP_P_7_DB;
+                case GEN_PINK_M14LUFS: return base * GAIN_AMP_P_9_DB;
+                case GEN_PINK_M12LUFS: return base * GAIN_AMP_P_11_DB;
+                default: break;
+            }
+            return GAIN_AMP_M_INF_DB;
+        }
+
         void loud_comp::update_settings()
         {
             bool rst_clip       = pHClipReset->value() >= 0.5f;
@@ -314,7 +356,7 @@ namespace lsp
             rank                = lsp_limit(rank, meta::loud_comp_metadata::FFT_RANK_MIN, meta::loud_comp_metadata::FFT_RANK_MAX);
             float volume        = pVolume->value();
             bool relative       = pRelative->value() >= 0.5f;
-            bool osc            = pReference->value() >= 0.5f;
+            bool reference       = pReference->value() >= 0.5f;
 
             // Need to update curve?
             if ((mode != nMode) || (rank != nRank) || (volume != fVolume))
@@ -327,7 +369,7 @@ namespace lsp
                 update_response_curve();
             }
 
-            if (osc != bReference)
+            if (reference != bReference)
                 sOsc.reset_phase_accumulator();
             if (bRelative != relative)
                 bSyncMesh           = true;
@@ -338,7 +380,12 @@ namespace lsp
             bHClipOn            = pHClipOn->value() >= 0.5f;
             bBypass             = bypass;
             bRelative           = relative;
-            bReference          = osc;
+            bReference          = reference;
+            enGenerator         = decode_generator(pGenerator->value());
+
+            // Set level of the noise generator
+            const float noise_gain = get_generator_amplitude(enGenerator, nChannels > 1);
+            sNoise.set_amplitude(noise_gain);
 
             if (bHClipOn)
             {
@@ -476,7 +523,10 @@ namespace lsp
 
             if (bReference) // Reference signal generation
             {
-                sOsc.process_overwrite(vChannels[0]->vOut, samples);
+                if (enGenerator == GEN_SINE)
+                    sOsc.process_overwrite(vChannels[0]->vOut, samples);
+                else
+                    sNoise.process_overwrite(vChannels[0]->vOut, samples);
 
                 vChannels[0]->fInLevel  = dsp::abs_max(vChannels[0]->vIn, samples) * fGain;
                 vChannels[0]->fOutLevel = dsp::abs_max(vChannels[0]->vOut, samples);

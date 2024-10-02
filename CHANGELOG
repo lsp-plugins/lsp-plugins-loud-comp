@@ -4,6 +4,7 @@
 
 === 1.0.21 ===
 * Added LUFS meters for input and output audio signal.
+* Added reference Pink noise generator of different standard loudness levels.
 * Updated build scripts and dependencies.
 
 === 1.0.20 ===

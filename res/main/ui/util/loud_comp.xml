@@ -7,8 +7,11 @@
 			<knob id="input" pad.h="6" pad.v="4" size="24"/>
 			<value id="input" />
 		</vbox>
-		<button id="refer" text="labels.signal.reference" ui:inject="Button_yellow"
-			width="62" pad.h="6" pad.v="4" vreduce="true"/>
+		<vbox>
+			<combo id="reftype" />
+			<button id="refer" text="labels.signal.reference" ui:inject="Button_yellow"
+				width="62" pad.h="6" pad.v="4" vreduce="true"/>
+		</vbox>
 	
 		<!-- c2 -->
 		<cell rows="3"><vsep pad.h="2" bg.color="bg" hreduce="true"/></cell>
