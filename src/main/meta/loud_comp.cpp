@@ -66,7 +66,7 @@ namespace lsp
 
         static const port_item_t loud_comp_generator[] =
         {
-            { "Sine @ 1kHz 0 dB",       "lcomp.gen.sine_1khz" },
+            { "Sine @ 1kHz 0 dBFS",     "lcomp.gen.sine_1khz" },
             { "Pink Noise @ -23 LUFS",  "lcomp.gen.pink_23" },
             { "Pink Noise @ -20 LUFS",  "lcomp.gen.pink_20" },
             { "Pink Noise @ -18 LUFS",  "lcomp.gen.pink_18" },
