@@ -25,7 +25,7 @@
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MAJOR       1
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MINOR       0
-#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       20
+#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       21
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION  \
     LSP_MODULE_VERSION( \
@@ -64,17 +64,32 @@ namespace lsp
             { NULL, NULL }
         };
 
+        static const port_item_t loud_comp_generator[] =
+        {
+            { "Sine @ 1kHz 0 dBFS",     "lcomp.gen.sine_1khz" },
+            { "Pink Noise @ -23 LUFS",  "lcomp.gen.pink_23" },
+            { "Pink Noise @ -20 LUFS",  "lcomp.gen.pink_20" },
+            { "Pink Noise @ -18 LUFS",  "lcomp.gen.pink_18" },
+            { "Pink Noise @ -16 LUFS",  "lcomp.gen.pink_16" },
+            { "Pink Noise @ -14 LUFS",  "lcomp.gen.pink_14" },
+            { "Pink Noise @ -12 LUFS",  "lcomp.gen.pink_12" },
+            { NULL, NULL }
+        };
+
         #define LOUD_COMP_COMMON \
             AMP_GAIN("input", "Input gain", GAIN_AMP_0_DB, GAIN_AMP_P_72_DB), \
             COMBO("std", "Loudness contour standard", loud_comp_metadata::STD_DFL, loud_comp_std), \
             COMBO("fft", "FFT size", loud_comp_metadata::FFT_RANK_IDX_DFL, loud_comp_fft_rank), \
             CONTROL("volume", "Output volume", U_DB, loud_comp_metadata::PHONS), \
-            SWITCH("refer", "Enable reference sine generator", 0.0f), \
+            SWITCH("refer", "Enable reference generator", 0.0f), \
+            COMBO("reftype", "Type of reference generator", 2.0f, loud_comp_generator), \
             SWITCH("hclip", "Hard-clipping enable", 0.0f), \
             CONTROL("hcrange", "Hard-clipping range", U_DB, loud_comp_metadata::HCRANGE), \
             TRIGGER("hcclean", "Clean hard-clipping indicators"), \
             MESH("spec", "Level compensation frequency graph", 2, loud_comp_metadata::CURVE_MESH_SIZE), \
-            SWITCH("relspec", "Equalization curve is shown relative to the volume", 0.0f)
+            SWITCH("relspec", "Equalization curve is shown relative to the volume", 0.0f), \
+            LUFS_METER("lufs_il", "Input signal LUFS", 24.0f), \
+            LUFS_METER("lufs_ol", "Input signal LUFS", 24.0f)
 
         static const port_t loud_comp_mono_ports[] =
         {

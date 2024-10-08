@@ -75,7 +75,16 @@
 	digital reference signal at 1000 Hz which can be reproduced by the audio system and measured by the SPL meter.
 </p>
 <p>
-	Since measuried signal at 1 kHz matches the same loudness level in phons, the amplification knob of the audio
+	As an alternative, you also can use pink noise generator at different standard loudness level meters:
+</p>
+	<ul>
+		<li><b>-23 LUFS</b> used by the EBU R.128 standard;</li> 
+		<li><b>-20 LUFS</b>, <b>-14 LUFS</b> and <b>-12 LUFS</b> used by the K metering system specification;</li>
+		<li><b>-18 LUFS</b> and <b>-16 LUFS</b> used by the AES TD1004.1.15-10 standard;</li>
+	</ul>
+
+<p>
+	Since measured reference signal matches the same loudness level, the amplification knob of the audio
 	system should be adjusted to reach the 83 dB SPL level on the SPL meter. After that, the <b>Volume</b> knob
 	can be used to attenuate the overall loudness of the system while preserving equal loudness perception by the ear.   
 </p>
@@ -84,11 +93,22 @@
 <ul>
 	<li><b>Bypass</b> - bypass switch, when turned on (led indicator is shining), the plugin bypasses signal.</li>
 	<li><b>Input</b> - the input gain settings, allows to adjust the level of the input signal to the desired level.</li>
-	<li><b>Reference</b> - turns on the reference sine wave with 0 dBFS amplitude and 1000 Hz frequency for callibration purposes.</li>
+	<li><b>Reference</b> - turns on the reference signal for callibration purposes.</li>
+	<li><b>Reference type combo</b> - allows to select the type of the reference signal:</li>
+	<ul>
+		<li><b>Sine @ 1kHz 0 dBFS</b> - the pure sine wave at 1000 Hz frequency and 0 dBFS amplitude, fully reflects the same value in phons;</li>
+		<li><b>Pink Noise @ -23 LUFS</b> - pink noise at -23 LUFS, may be useful for audio broadcasting according to the EBU R.128 standard;</li>
+		<li><b>Pink Noise @ -20 LUFS</b> - pink noise at -20 LUFS, the actual 0 dB value for the K20 metering system;</li>
+		<li><b>Pink Noise @ -18 LUFS</b> - pink noise at -18 LUFS, may be useful for audio broadcasting according to the AES TD1004.1.15-10 standard;</li>
+		<li><b>Pink Noise @ -16 LUFS</b> - pink noise at -16 LUFS, may be useful for audio broadcasting according to the AES TD1004.1.15-10 standard;</li>
+		<li><b>Pink Noise @ -14 LUFS</b> - pink noise at -14 LUFS, the actual 0 dB value for the K14 metering system;</li>
+		<li><b>Pink Noise @ -12 LUFS</b> - pink noise at -12 LUFS, the actual 0 dB value for the K12 metering system.</li>
+	</ul>
 	<li><b>Contour</b> - allows to select different equal loudness contour:</li>
 	<ul>
 		<li><b>Flat</b> - applies flat frequency response to the whole spectum. Is similar to just a gain knob but useful to perform a comparison to other mode</li>
 		<li><b>ISO 226:2003</b> - applies recent ISO 226-2003 contours to the signal</li>
+		<li><b>ISO 226:2023</b> - applies recent ISO 226-2023 contours to the signal</li>
 		<li><b>Fletcher and Munson</b> - applies Fletcher and Munson (1933) contours to the signal</li>
 		<li><b>Robinson and Dadson</b> - applies Robinson and Dadson (1956) contours to the signal</li>
 	</ul>

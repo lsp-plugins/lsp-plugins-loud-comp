@@ -26,6 +26,8 @@
 #include <lsp-plug.in/plug-fw/core/IDBuffer.h>
 #include <lsp-plug.in/dsp-units/ctl/Blink.h>
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
+#include <lsp-plug.in/dsp-units/meters/LoudnessMeter.h>
+#include <lsp-plug.in/dsp-units/noise/Generator.h>
 #include <lsp-plug.in/dsp-units/util/Delay.h>
 #include <lsp-plug.in/dsp-units/util/Oscillator.h>
 #include <lsp-plug.in/dsp-units/util/SpectralProcessor.h>
@@ -64,19 +66,33 @@ namespace lsp
                     plug::IPort            *pHClipInd;  // Hard clipping indicator
                 } channel_t;
 
+                enum generator_t
+                {
+                    GEN_SINE,
+                    GEN_PINK_M23LUFS,
+                    GEN_PINK_M20LUFS,
+                    GEN_PINK_M18LUFS,
+                    GEN_PINK_M16LUFS,
+                    GEN_PINK_M14LUFS,
+                    GEN_PINK_M12LUFS,
+                };
+
             protected:
                 size_t                  nChannels;      // Number of channels
                 size_t                  nMode;          // Current curve mode
                 size_t                  nRank;          // Current FFT rank
                 float                   fGain;          // Input gain
                 float                   fVolume;        // Volume
+                float                   fInLufs;        // Input LUFS
+                float                   fOutLufs;       // Output LUFS
+                generator_t             enGenerator;    // Generator type
                 bool                    bBypass;        // Bypass
                 bool                    bRelative;      // Display relative curve instead of absolute
                 bool                    bReference;     // Reference generator
                 bool                    bHClipOn;       // Enable hard-clipping
                 float                   fHClipLvl;      // Hard-clip threshold
                 channel_t              *vChannels[2];   // Audio channels
-                float                  *vTmpBuf;        // Temporary buffer for interpolating curve characteristics
+                float                  *vTmpBuf;        // Temporary buffer for processing
                 float                  *vFreqApply;     // Frequency response applied to the output signal
                 float                  *vFreqMesh;      // List of frequencies for the mesh
                 float                  *vAmpMesh;       // List of amplitudes for the mesh
@@ -84,6 +100,9 @@ namespace lsp
                 core::IDBuffer         *pIDisplay;      // Inline display buffer
 
                 dspu::Oscillator        sOsc;           // Oscillator for reference sound
+                dspu::NoiseGenerator    sNoise;         // Pink noise generator
+                dspu::LoudnessMeter     sInMeter;       // Input loudness meter
+                dspu::LoudnessMeter     sOutMeter;      // Output loudness meter
 
                 uint8_t                *pData;          // Allocation data
 
@@ -94,7 +113,10 @@ namespace lsp
                 plug::IPort            *pVolume;        // Output volume
                 plug::IPort            *pMesh;          // Output mesh response
                 plug::IPort            *pRelative;      // Relative mesh display
+                plug::IPort            *pLufsIn;        // Input LUFS meter
+                plug::IPort            *pLufsOut;       // Output LUFS meter
                 plug::IPort            *pReference;     // Enable reference sine generator
+                plug::IPort            *pGenerator;     // Generator type
                 plug::IPort            *pHClipOn;       // Enable Hard clip
                 plug::IPort            *pHClipRange;    // Hard clipping range
                 plug::IPort            *pHClipReset;    // Hard clipping reset
@@ -106,6 +128,8 @@ namespace lsp
 
             protected:
                 static void         process_callback(void *object, void *subject, float *buf, size_t rank);
+                static generator_t  decode_generator(size_t generator);
+                static float        get_generator_amplitude(generator_t gen, bool stereo);
 
             public:
                 explicit loud_comp(const meta::plugin_t *metadata, size_t channels);
