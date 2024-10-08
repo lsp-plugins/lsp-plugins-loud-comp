@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.22 ===
+
+
 === 1.0.21 ===
 * Added LUFS meters for input and output audio signal.
 * Added reference Pink noise generator of different standard loudness levels.
