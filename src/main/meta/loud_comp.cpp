@@ -80,11 +80,11 @@ namespace lsp
             AMP_GAIN("input", "Input gain", GAIN_AMP_0_DB, GAIN_AMP_P_72_DB), \
             COMBO("std", "Loudness contour standard", "Standard", loud_comp_metadata::STD_DFL, loud_comp_std), \
             COMBO("fft", "FFT size", "FFT size", loud_comp_metadata::FFT_RANK_IDX_DFL, loud_comp_fft_rank), \
-            CONTROL("volume", "Output volume", U_DB, loud_comp_metadata::PHONS), \
+            CONTROL("volume", "Output volume", "Out volume", U_DB, loud_comp_metadata::PHONS), \
             SWITCH("refer", "Enable reference generator", "Reference", 0.0f), \
             COMBO("reftype", "Type of reference generator", "Ref type", 2.0f, loud_comp_generator), \
-            SWITCH("hclip", "Hard-clipping enable", "Hard clip", 0.0f), \
-            CONTROL("hcrange", "Hard-clipping range", U_DB, loud_comp_metadata::HCRANGE), \
+            SWITCH("hclip", "Hard-clipping enable", "Hard clip on", 0.0f), \
+            CONTROL("hcrange", "Hard-clipping range", "Hard clip", U_DB, loud_comp_metadata::HCRANGE), \
             TRIGGER("hcclean", "Clean hard-clipping indicators", "Clear hard clip"), \
             MESH("spec", "Level compensation frequency graph", 2, loud_comp_metadata::CURVE_MESH_SIZE), \
             SWITCH("relspec", "Equalization curve is shown relative to the volume", "Rel curve", 0.0f), \
