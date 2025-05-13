@@ -77,7 +77,7 @@ namespace lsp
         };
 
         #define LOUD_COMP_COMMON \
-            AMP_GAIN("input", "Input gain", GAIN_AMP_0_DB, GAIN_AMP_P_72_DB), \
+            AMP_GAIN("input", "Input gain", "Input gain", GAIN_AMP_0_DB, GAIN_AMP_P_72_DB), \
             COMBO("std", "Loudness contour standard", "Standard", loud_comp_metadata::STD_DFL, loud_comp_std), \
             COMBO("fft", "FFT size", "FFT size", loud_comp_metadata::FFT_RANK_IDX_DFL, loud_comp_fft_rank), \
             CONTROL("volume", "Output volume", "Out volume", U_DB, loud_comp_metadata::PHONS), \
