@@ -28,12 +28,12 @@ namespace lsp
 {
     typedef struct freq_curve_t
     {
-        float   fmin;       // The minimum frequency per curve
-        float   fmax;       // The maximum frequency per curve
-        float   amin;       // The minimum amplitude per curve
-        float   amax;       // The maximum amplitude per curve
-        size_t  hdots;      // Number of dots per each curve
-        size_t  curves;     // The overall number of curves
+        float       fmin;       // The minimum frequency per curve
+        float       fmax;       // The maximum frequency per curve
+        float       amin;       // The minimum amplitude per curve
+        float       amax;       // The maximum amplitude per curve
+        uint32_t    hdots;      // Number of dots per each curve
+        uint32_t    curves;     // The overall number of curves
 
         const int16_t * const *data; // The array of curve data in fixed-point format (2 digits after point).
     } freq_curve_t;

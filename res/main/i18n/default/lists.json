@@ -15,6 +15,10 @@
 			"pink_20": "Pink Noise @ -20 LUFS",
 			"pink_23": "Pink Noise @ -23 LUFS",
             "sine_1khz": "Sine @ 1kHz 0 dBFS"
+		},
+		"mode": {
+			"iir": "IIR",
+			"fft": "FFT"
 		}
 	}
 }

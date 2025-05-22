@@ -69,7 +69,8 @@ namespace lsp
         loud_comp::loud_comp(const meta::plugin_t *metadata, size_t channels): plug::Module(metadata)
         {
             nChannels       = channels;
-            nMode           = 0;
+            nMode           = meta::loud_comp_metadata::MODE_FFT;
+            nCurve          = 0;
             nRank           = meta::loud_comp_metadata::FFT_RANK_MIN;
             fGain           = 0.0f;
             fVolume         = -1.0f;
@@ -94,6 +95,7 @@ namespace lsp
             pBypass         = NULL;
             pGain           = NULL;
             pMode           = NULL;
+            pCurve          = NULL;
             pRank           = NULL;
             pVolume         = NULL;
             pMesh           = NULL;
@@ -172,12 +174,15 @@ namespace lsp
                 c->sDelay.construct();
                 c->sBypass.construct();
                 c->sProc.construct();
+                c->sEqualizer.construct();
                 c->sClipInd.construct();
 
                 c->sDelay.init(1 << (meta::loud_comp_metadata::FFT_RANK_MAX - 1));
                 c->sProc.init(meta::loud_comp_metadata::FFT_RANK_MAX);
                 c->sProc.bind(process_callback, this, c);
                 c->sProc.set_phase(0.5f * i);
+                c->sEqualizer.init(meta::loud_comp_metadata::FILTER_BANDS, 0);
+                c->sEqualizer.set_mode(dspu::EQM_IIR);
 
                 c->vIn              = NULL;
                 c->vOut             = NULL;
@@ -227,6 +232,7 @@ namespace lsp
             BIND_PORT(pBypass);
             BIND_PORT(pGain);
             BIND_PORT(pMode);
+            BIND_PORT(pCurve);
             BIND_PORT(pRank);
             BIND_PORT(pVolume);
             BIND_PORT(pReference);
@@ -312,6 +318,7 @@ namespace lsp
                 // Update processor settings
                 c->sBypass.init(sr);
                 c->sClipInd.init(sr, 0.2f);
+                c->sEqualizer.set_sample_rate(sr);
             }
         }
 
@@ -350,24 +357,41 @@ namespace lsp
 
         void loud_comp::update_settings()
         {
-            bool rst_clip       = pHClipReset->value() >= 0.5f;
-            bool bypass         = pBypass->value() >= 0.5f;
-            size_t mode         = pMode->value();
-            size_t rank         = meta::loud_comp_metadata::FFT_RANK_MIN + ssize_t(pRank->value());
-            rank                = lsp_limit(rank, meta::loud_comp_metadata::FFT_RANK_MIN, meta::loud_comp_metadata::FFT_RANK_MAX);
-            float volume        = pVolume->value();
-            bool relative       = pRelative->value() >= 0.5f;
-            bool reference       = pReference->value() >= 0.5f;
+            const bool rst_clip     = pHClipReset->value() >= 0.5f;
+            const bool bypass       = pBypass->value() >= 0.5f;
+            const uint32_t mode     = pMode->value();
+            const uint32_t curve    = pCurve->value();
+            uint32_t rank           = meta::loud_comp_metadata::FFT_RANK_MIN + ssize_t(pRank->value());
+            rank                    = lsp_limit(rank, meta::loud_comp_metadata::FFT_RANK_MIN, meta::loud_comp_metadata::FFT_RANK_MAX);
+            const float volume      = pVolume->value();
+            const bool relative     = pRelative->value() >= 0.5f;
+            const bool reference    = pReference->value() >= 0.5f;
 
             // Need to update curve?
-            if ((mode != nMode) || (rank != nRank) || (volume != fVolume))
+            if (mode == meta::loud_comp_metadata::MODE_FFT)
             {
-                nMode               = mode;
-                nRank               = rank;
-                fVolume             = volume;
-                bSyncMesh           = true;
+                if ((nMode != mode) || (curve != nCurve) || (rank != nRank) || (volume != fVolume))
+                {
+                    nMode               = mode;
+                    nCurve              = curve;
+                    nRank               = rank;
+                    fVolume             = volume;
+                    bSyncMesh           = true;
 
-                update_response_curve();
+                    update_fft_curve();
+                }
+            }
+            else // mode == meta::loud_comp_metadata::MODE_IIR
+            {
+                if ((nMode != mode) || (curve != nCurve) || (volume != fVolume))
+                {
+                    nMode               = mode;
+                    nCurve              = curve;
+                    fVolume             = volume;
+                    bSyncMesh           = true;
+
+                    update_iir_curve();
+                }
             }
 
             if (reference != bReference)
@@ -399,18 +423,32 @@ namespace lsp
 
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c        = vChannels[i];
+                channel_t *c            = vChannels[i];
+                const size_t latency    = (nMode == meta::loud_comp_metadata::MODE_FFT) ? c->sProc.latency() : c->sEqualizer.get_latency();
+
                 c->sBypass.set_bypass(bypass);
                 c->sProc.set_rank(rank);
-                c->sDelay.set_delay(c->sProc.latency());
+
+                c->sDelay.set_delay(latency);
                 if (rst_clip)
                     c->bHClip       = false;
             }
         }
 
-        void loud_comp::update_response_curve()
+        void loud_comp::generate_frequencies()
         {
-            const freq_curve_t *c   = ((nMode > 0) && (nMode <= NUM_CURVES)) ? freq_curves[nMode-1] : NULL;
+            // Initialize list of frequencies
+            const float norm        = logf(meta::loud_comp_metadata::FREQ_MAX/meta::loud_comp_metadata::FREQ_MIN) /
+                                      (meta::loud_comp_metadata::CURVE_MESH_SIZE - 1);
+            for (size_t i=0; i<meta::loud_comp_metadata::CURVE_MESH_SIZE; ++i)
+                vFreqMesh[i]    = i * norm;
+            dsp::exp1(vFreqMesh, meta::loud_comp_metadata::CURVE_MESH_SIZE);
+            dsp::mul_k2(vFreqMesh, meta::loud_comp_metadata::FREQ_MIN, meta::loud_comp_metadata::CURVE_MESH_SIZE);
+        }
+
+        void loud_comp::update_fft_curve()
+        {
+            const freq_curve_t *c   = ((nCurve > 0) && (nCurve <= NUM_CURVES)) ? freq_curves[nCurve-1] : NULL;
             size_t fft_size         = 1 << nRank;
             size_t fft_csize        = (fft_size >> 1) + 1;
 
@@ -419,7 +457,7 @@ namespace lsp
                 // Get the volume
                 const float vol     = lsp_limit(fVolume - meta::loud_comp_metadata::PHONS_MIN, c->amin, c->amax) - c->amin;
 
-                // Compute interpolatoin coefficients
+                // Compute interpolation coefficients
                 float range         = c->amax - c->amin;
                 const float step    = range / (c->curves - 1);
                 ssize_t nc          = vol / step;
@@ -440,8 +478,8 @@ namespace lsp
                 ssize_t idx;
                 float *v            = vFreqApply;
                 const float rfmin   = 1.0f / c->fmin;
-                range               = 1.0f / logf(c->fmax * rfmin);
                 const float kf      = float(fSampleRate) / float(fft_size);
+                const float kdf     = (c->hdots - 1) / logf(c->fmax * rfmin);
                 for (size_t i=0; i < fft_csize; ++i, v += 2)
                 {
                     float f     = kf * i; // Target frequency
@@ -450,10 +488,7 @@ namespace lsp
                     else if (f >= c->fmax)
                         idx         = c->hdots - 1;
                     else
-                    {
-                        f               = logf(f * rfmin);
-                        idx             = (f * c->hdots) * range;
-                    }
+                        idx             = logf(f * rfmin) * kdf;
 
                     f           = vTmpBuf[idx];
                     v[0]        = f;
@@ -471,20 +506,15 @@ namespace lsp
             }
             else
             {
-                float vol   = dspu::db_to_gain(fVolume);
+                const float vol     = dspu::db_to_gain(fVolume);
                 dsp::fill(vFreqApply, vol, fft_size * 2);
             }
 
             // Initialize list of frequencies
-            float norm          = logf(meta::loud_comp_metadata::FREQ_MAX/meta::loud_comp_metadata::FREQ_MIN) /
-                                      (meta::loud_comp_metadata::CURVE_MESH_SIZE - 1);
-            for (size_t i=0; i<meta::loud_comp_metadata::CURVE_MESH_SIZE; ++i)
-                vFreqMesh[i]    = i * norm;
-            dsp::exp1(vFreqMesh, meta::loud_comp_metadata::CURVE_MESH_SIZE);
-            dsp::mul_k2(vFreqMesh, meta::loud_comp_metadata::FREQ_MIN, meta::loud_comp_metadata::CURVE_MESH_SIZE);
+            generate_frequencies();
 
             // Build amp mesh
-            float xf                = float(fft_size) / float(fSampleRate);
+            const float xf          = float(fft_size) / float(fSampleRate);
             for (size_t i=0; i<meta::loud_comp_metadata::CURVE_MESH_SIZE; ++i)
             {
                 size_t ix       = xf * vFreqMesh[i];
@@ -492,6 +522,110 @@ namespace lsp
                     ix                  = fft_csize;
                 vAmpMesh[i]     = vFreqApply[ix << 1];
             }
+        }
+
+        void loud_comp::update_iir_curve()
+        {
+            const freq_curve_t *c   = ((nCurve > 0) && (nCurve <= NUM_CURVES)) ? freq_curves[nCurve-1] : NULL;
+            float *freqs            = vTmpBuf;
+            float *gains            = vFreqApply;
+
+            if (c != NULL)
+            {
+                // Generate the list of frequencies
+                const float rfmin   = 1.0f / c->fmin;
+                const float df      = logf(c->fmax * rfmin);
+                const float kf      = df / (meta::loud_comp_metadata::FILTER_BANDS - 1);
+                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                    freqs[i]            = c->fmin * expf((i + 0.5f) * kf);
+
+                // Get the volume
+                const float vol     = lsp_limit(fVolume - meta::loud_comp_metadata::PHONS_MIN, c->amin, c->amax) - c->amin;
+
+                // Compute interpolation coefficients
+                float range         = c->amax - c->amin;
+                const float step    = range / (c->curves - 1);
+                ssize_t nc          = vol / step;
+                if (nc >= ssize_t(c->curves - 1))
+                    --nc;
+                const float k2      = CURVE_APPROX * (vol/step - nc);
+                const float k1      = CURVE_APPROX - k2;
+
+                // Compute frequency response
+                ssize_t idx;
+                const int16_t *a    = c->data[nc];
+                const int16_t *b    = c->data[nc+1];
+                const float kdf     = (c->hdots - 1) / df;
+
+                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                {
+                    const float f       = c->fmin * expf(i * kf);
+                    if (f <= c->fmin)
+                        idx                 = 0;
+                    else if (f >= c->fmax)
+                        idx                 = c->hdots - 1;
+                    else
+                        idx                 = logf(f * rfmin) * kdf;
+
+                    if (idx >= ssize_t(c->hdots))
+                        lsp_trace("debug");
+
+                    gains[i]            = expf(a[idx] * k1 + b[idx] * k2);
+                }
+            }
+            else
+            {
+                const float df      = logf(SPEC_FREQ_MAX / SPEC_FREQ_MIN);
+                const float kf      = df / (meta::loud_comp_metadata::FILTER_BANDS - 1);
+                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                    freqs[i]            = SPEC_FREQ_MIN * expf((i + 0.5f) * kf);
+
+                const float vol     = dspu::db_to_gain(fVolume);
+                dsp::fill(gains, vol, meta::loud_comp_metadata::FILTER_BANDS);
+            }
+
+            // Configure equalizer
+            dspu::filter_params_t fp;
+            fp.nType            = dspu::FLT_NONE;
+            fp.nSlope           = 4;
+            fp.fFreq            = 0.0f;
+            fp.fFreq2           = 0.0f;
+            fp.fGain            = GAIN_AMP_0_DB;
+            fp.fQuality         = 0.0f;
+
+            for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+            {
+                if (i == 0) // Low-shelf
+                {
+                    fp.nType        = dspu::FLT_BT_LRX_LOSHELF;
+                    fp.fFreq        = freqs[0];
+                    fp.fFreq2       = fp.fFreq;
+                }
+                else if (i < meta::loud_comp_metadata::FILTER_BANDS - 1) // Ladder-pass
+                {
+                    fp.nType        = dspu::FLT_BT_LRX_LADDERPASS;
+                    fp.fFreq        = freqs[i-1];
+                    fp.fFreq2       = freqs[i];
+                }
+                else // High-shelf
+                {
+                    fp.nType        = dspu::FLT_BT_LRX_HISHELF;
+                    fp.fFreq        = freqs[i-1];
+                    fp.fFreq2       = fp.fFreq;
+                }
+
+                fp.fGain        = gains[i];
+
+                for (size_t j=0; j<nChannels; ++j)
+                    vChannels[j]->sEqualizer.set_params(i, &fp);
+            }
+
+            // Initialize list of frequencies
+            generate_frequencies();
+
+            // Compute the frequency response
+            vChannels[0]->sEqualizer.freq_chart(vFreqApply, vFreqMesh, meta::loud_comp_metadata::CURVE_MESH_SIZE);
+            dsp::pcomplex_mod(vAmpMesh, vFreqApply, meta::loud_comp_metadata::CURVE_MESH_SIZE);
         }
 
         void loud_comp::process_callback(void *object, void *subject, float *buf, size_t rank)
@@ -506,6 +640,150 @@ namespace lsp
             // Apply spectrum changes to the FFT image
             size_t count = 2 << nRank;
             dsp::mul2(buf, vFreqApply, count);
+        }
+
+        void loud_comp::generate_signal(size_t samples)
+        {
+            float lvl;
+
+            if (enGenerator == GEN_SINE)
+                sOsc.process_overwrite(vChannels[0]->vOut, samples);
+            else
+                sNoise.process_overwrite(vChannels[0]->vOut, samples);
+
+            vChannels[0]->fInLevel  = dsp::abs_max(vChannels[0]->vIn, samples) * fGain;
+            vChannels[0]->fOutLevel = dsp::abs_max(vChannels[0]->vOut, samples);
+
+            for (size_t i=1; i<nChannels; ++i)
+            {
+                dsp::copy(vChannels[i]->vOut, vChannels[0]->vOut, samples);
+                vChannels[i]->fInLevel  = dsp::abs_max(vChannels[i]->vIn, samples) * fGain;
+                vChannels[i]->fOutLevel = vChannels[0]->fOutLevel;
+            }
+
+            // Measure input and output loudness
+            for (size_t offset = 0; offset < samples; )
+            {
+                size_t to_process   = lsp_min(samples - offset, BUF_SIZE);
+
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    sInMeter.bind(i, NULL, vChannels[i]->vIn, 0);
+                    sOutMeter.bind(i, NULL, vChannels[i]->vOut, 0);
+                }
+
+                sInMeter.process(vTmpBuf, to_process);
+                lvl             = dsp::max(vTmpBuf, to_process);
+                fInLufs         = lsp_max(fInLufs, lvl * fGain);
+
+                sOutMeter.process(vTmpBuf, to_process);
+                lvl             = dsp::max(vTmpBuf, to_process);
+                fOutLufs        = lsp_max(fOutLufs, lvl);
+
+                // Update sample counter
+                offset             += to_process;
+            }
+
+            //---------------------------------------------------------------------
+            // Perform clipping detection
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                channel_t *c    = vChannels[i];
+                c->sClipInd.process(samples);
+                if (bHClipOn)
+                    c->pHClipInd->set_value((c->bHClip) ? 1.0f : 0.0f);
+                else
+                    c->pHClipInd->set_value((c->sClipInd.value()) ? 1.0f : 0.0f);
+            }
+        }
+
+        void loud_comp::process_audio(size_t samples)
+        {
+            float lvl;
+
+            for (size_t offset = 0; offset < samples; )
+            {
+                size_t to_process   = lsp_min(samples - offset, BUF_SIZE);
+
+                // Pre-process input signal
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t *c    = vChannels[i];
+
+                    // Process the signal
+                    c->sDelay.process(c->vDry, c->vIn, to_process);
+
+                    // Apply input gain
+                    dsp::mul_k3(c->vBuffer, c->vIn, fGain, to_process);
+                    lvl             = dsp::abs_max(c->vBuffer, samples);
+                    c->fInLevel     = lsp_max(c->fInLevel, lvl);
+                }
+
+                // Measure input loudness
+                for (size_t i=0; i<nChannels; ++i)
+                    sInMeter.bind(i, NULL, vChannels[i]->vBuffer, 0);
+                sInMeter.process(vTmpBuf, to_process);
+                lvl             = dsp::max(vTmpBuf, to_process);
+                fInLufs         = lsp_max(fInLufs, lvl);
+
+                // Do the loudness compensation
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t *c    = vChannels[i];
+
+                    // Apply volume attenuation
+                    if (nMode == meta::loud_comp_metadata::MODE_FFT)
+                        c->sProc.process(c->vBuffer, c->vBuffer, to_process);
+                    else
+                        c->sEqualizer.process(c->vBuffer, c->vBuffer, to_process);
+
+                    // Perform clipping
+                    lvl             = dsp::abs_max(c->vBuffer, to_process);
+                    c->sClipInd.process(to_process);
+                    bool clip       = lvl > fHClipLvl;
+                    if (bHClipOn)
+                    {
+                        // Update buffer if clipping occurred
+                        if (clip)
+                        {
+                            lvl             = fHClipLvl;
+                            c->bHClip       = true;
+
+                            dsp::limit1(c->vBuffer, -fHClipLvl, +fHClipLvl, to_process);
+                        }
+
+                        c->pHClipInd->set_value((c->bHClip) ? 1.0f : 0.0f);
+                    }
+                    else
+                    {
+                        if (clip)
+                            c->sClipInd.blink();
+                        c->pHClipInd->set_value((c->sClipInd.value()) ? 1.0f : 0.0f);
+                    }
+                    c->fOutLevel    = (c->fOutLevel < lvl) ? lvl : c->fOutLevel;
+
+                    // Apply bypass
+                    c->sBypass.process(c->vOut, c->vDry, c->vBuffer, to_process);
+                }
+
+                // Measure output loudness
+                for (size_t i=0; i<nChannels; ++i)
+                    sOutMeter.bind(i, NULL, vChannels[i]->vBuffer, 0);
+                sOutMeter.process(vTmpBuf, to_process);
+                lvl                 = dsp::max(vTmpBuf, to_process);
+                fOutLufs            = lsp_max(fOutLufs, lvl);
+
+                // Update sample counter and pointers
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t *c    = vChannels[i];
+
+                    // Update pointers
+                    c->vIn         += to_process;
+                    c->vOut        += to_process;
+                }
+                offset         += to_process;
+            }
         }
 
         void loud_comp::process(size_t samples)
@@ -525,140 +803,10 @@ namespace lsp
 
             //---------------------------------------------------------------------
             // Perform main processing
-            float lvl;
-
             if (bReference) // Reference signal generation
-            {
-                if (enGenerator == GEN_SINE)
-                    sOsc.process_overwrite(vChannels[0]->vOut, samples);
-                else
-                    sNoise.process_overwrite(vChannels[0]->vOut, samples);
-
-                vChannels[0]->fInLevel  = dsp::abs_max(vChannels[0]->vIn, samples) * fGain;
-                vChannels[0]->fOutLevel = dsp::abs_max(vChannels[0]->vOut, samples);
-
-                for (size_t i=1; i<nChannels; ++i)
-                {
-                    dsp::copy(vChannels[i]->vOut, vChannels[0]->vOut, samples);
-                    vChannels[i]->fInLevel  = dsp::abs_max(vChannels[i]->vIn, samples) * fGain;
-                    vChannels[i]->fOutLevel = vChannels[0]->fOutLevel;
-                }
-
-                // Measure input and output loudness
-                for (size_t offset = 0; offset < samples; )
-                {
-                    size_t to_process   = lsp_min(samples - offset, BUF_SIZE);
-
-                    for (size_t i=0; i<nChannels; ++i)
-                    {
-                        sInMeter.bind(i, NULL, vChannels[i]->vIn, 0);
-                        sOutMeter.bind(i, NULL, vChannels[i]->vOut, 0);
-                    }
-
-                    sInMeter.process(vTmpBuf, to_process);
-                    lvl             = dsp::max(vTmpBuf, to_process);
-                    fInLufs         = lsp_max(fInLufs, lvl * fGain);
-
-                    sOutMeter.process(vTmpBuf, to_process);
-                    lvl             = dsp::max(vTmpBuf, to_process);
-                    fOutLufs        = lsp_max(fOutLufs, lvl);
-
-                    // Update sample counter
-                    offset             += to_process;
-                }
-
-                // Perform clipping detection
-                for (size_t i=0; i<nChannels; ++i)
-                {
-                    channel_t *c    = vChannels[i];
-                    c->sClipInd.process(samples);
-                    if (bHClipOn)
-                        c->pHClipInd->set_value((c->bHClip) ? 1.0f : 0.0f);
-                    else
-                        c->pHClipInd->set_value((c->sClipInd.value()) ? 1.0f : 0.0f);
-                }
-            }
+                generate_signal(samples);
             else // Audio processing
-            {
-                for (size_t offset = 0; offset < samples; )
-                {
-                    size_t to_process   = lsp_min(samples - offset, BUF_SIZE);
-
-                    // Pre-process input signal
-                    for (size_t i=0; i<nChannels; ++i)
-                    {
-                        channel_t *c    = vChannels[i];
-
-                        // Process the signal
-                        c->sDelay.process(c->vDry, c->vIn, to_process);
-
-                        // Apply input gain
-                        dsp::mul_k3(c->vBuffer, c->vIn, fGain, to_process);
-                        lvl             = dsp::abs_max(c->vBuffer, samples);
-                        c->fInLevel     = lsp_max(c->fInLevel, lvl);
-                    }
-
-                    // Measure input loudness
-                    for (size_t i=0; i<nChannels; ++i)
-                        sInMeter.bind(i, NULL, vChannels[i]->vBuffer, 0);
-                    sInMeter.process(vTmpBuf, to_process);
-                    lvl             = dsp::max(vTmpBuf, to_process);
-                    fInLufs         = lsp_max(fInLufs, lvl);
-
-                    // Do the loudness compensation
-                    for (size_t i=0; i<nChannels; ++i)
-                    {
-                        channel_t *c    = vChannels[i];
-
-                        // Apply volume attenuation
-                        c->sProc.process(c->vBuffer, c->vBuffer, to_process);
-
-                        // Perform clipping
-                        lvl             = dsp::abs_max(c->vBuffer, to_process);
-                        c->sClipInd.process(to_process);
-                        bool clip       = lvl > fHClipLvl;
-                        if (bHClipOn)
-                        {
-                            if (clip)
-                            {
-                                lvl             = fHClipLvl;
-                                c->bHClip       = true;
-                            }
-
-                            dsp::limit1(c->vBuffer, -fHClipLvl, +fHClipLvl, to_process);
-                            c->pHClipInd->set_value((c->bHClip) ? 1.0f : 0.0f);
-                        }
-                        else
-                        {
-                            if (clip)
-                                c->sClipInd.blink();
-                            c->pHClipInd->set_value((c->sClipInd.value()) ? 1.0f : 0.0f);
-                        }
-                        c->fOutLevel    = (c->fOutLevel < lvl) ? lvl : c->fOutLevel;
-
-                        // Apply bypass
-                        c->sBypass.process(c->vOut, c->vDry, c->vBuffer, to_process);
-                    }
-
-                    // Measure output loudness
-                    for (size_t i=0; i<nChannels; ++i)
-                        sOutMeter.bind(i, NULL, vChannels[i]->vBuffer, 0);
-                    sOutMeter.process(vTmpBuf, to_process);
-                    lvl                 = dsp::max(vTmpBuf, to_process);
-                    fOutLufs            = lsp_max(fOutLufs, lvl);
-
-                    // Update sample counter and pointers
-                    for (size_t i=0; i<nChannels; ++i)
-                    {
-                        channel_t *c    = vChannels[i];
-
-                        // Update pointers
-                        c->vIn         += to_process;
-                        c->vOut        += to_process;
-                    }
-                    offset         += to_process;
-                }
-            }
+                process_audio(samples);
 
             //---------------------------------------------------------------------
             // Update meters
@@ -839,6 +987,7 @@ namespace lsp
 
             v->write("nChannels", nChannels);
             v->write("nMode", nMode);
+            v->write("nCurve", nCurve);
             v->write("nRank", nRank);
             v->write("fGain", fGain);
             v->write("fInLufs", fInLufs);
@@ -865,6 +1014,7 @@ namespace lsp
                     v->write_object("sBypass", &c->sBypass);
                     v->write_object("sDelay", &c->sDelay);
                     v->write_object("sProc", &c->sProc);
+                    v->write_object("sEqualizer", &c->sEqualizer);
                     v->write_object("sClipInd", &c->sClipInd);
 
                     v->write("pIn", c->pIn);
@@ -891,7 +1041,7 @@ namespace lsp
 
             v->write("pBypass", pBypass);
             v->write("pGain", pGain);
-            v->write("pMode", pMode);
+            v->write("pCurve", pCurve);
             v->write("pRank", pRank);
             v->write("pVolume", pVolume);
             v->write("pMesh", pMesh);

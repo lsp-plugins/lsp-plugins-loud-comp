@@ -22,10 +22,12 @@
 					<void expand="true"/>
 					<vsep pad.h="2" bg.color="bg" hreduce="true"/>
 					<button id="relspec" text="labels.signal.relative" size="16" ui:inject="Button_green"/>
+					<label text="labels.mode:" pad.l="4" />
+					<combo id="mode"/>
 					<label text="labels.contour:" pad.l="4" />
 					<combo id="std"/>
 					<label text="labels.fft.fft:" pad.l="4"/>
-					<combo id="fft"/>
+					<combo id="fft" activity=":mode ieq 0" />
 				</hbox>
 			</cell>
 

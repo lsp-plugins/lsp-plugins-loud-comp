@@ -51,6 +51,14 @@ namespace lsp
             static constexpr size_t STD_DFL             = 4;
 
             static constexpr size_t CURVE_MESH_SIZE     = 512;
+
+            static constexpr size_t FILTER_BANDS        = 48;
+
+            enum mode_t
+            {
+                MODE_FFT,
+                MODE_IIR
+            };
         };
 
         extern const meta::plugin_t loud_comp_mono;
