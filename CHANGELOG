@@ -3,7 +3,7 @@
 *******************************************************************************
 
 === 1.0.26 ===
-
+* Twice reduced the size of stored loudness curves' tables.
 
 === 1.0.25 ===
 * Updated build scripts and dependencies.

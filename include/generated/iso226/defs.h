@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2020 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2020 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins
  * Created on: 29 июн. 2020 г.
@@ -35,7 +35,7 @@ namespace lsp
         size_t  hdots;      // Number of dots per each curve
         size_t  curves;     // The overall number of curves
 
-        const float * const *data; // The array of curve data
+        const int16_t * const *data; // The array of curve data in fixed-point format (2 digits after point).
     } freq_curve_t;
 }
 

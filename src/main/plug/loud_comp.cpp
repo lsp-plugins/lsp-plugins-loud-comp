@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2024 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2024 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -47,6 +47,7 @@ namespace lsp
 
         static constexpr size_t BUF_SIZE        = 0x1000;
         static constexpr size_t NUM_CURVES      = (sizeof(freq_curves)/sizeof(freq_curve_t *));
+        static constexpr float CURVE_APPROX     = 0.0005f * M_LN10;
 
         //-------------------------------------------------------------------------
         // Plugin factory
@@ -416,26 +417,31 @@ namespace lsp
             if (c != NULL)
             {
                 // Get the volume
-                float vol   = lsp_limit(fVolume - meta::loud_comp_metadata::PHONS_MIN, c->amin, c->amax) - c->amin;
+                const float vol     = lsp_limit(fVolume - meta::loud_comp_metadata::PHONS_MIN, c->amin, c->amax) - c->amin;
 
                 // Compute interpolatoin coefficients
-                float range = c->amax - c->amin;
-                float step  = range / (c->curves-1);
-                ssize_t nc  = vol / step;
-                if (nc >= ssize_t(c->curves-1))
+                float range         = c->amax - c->amin;
+                const float step    = range / (c->curves - 1);
+                ssize_t nc          = vol / step;
+                if (nc >= ssize_t(c->curves - 1))
                     --nc;
-                float k2    = 0.05f * M_LN10 * (vol/step - nc);
-                float k1    = 0.05f * M_LN10 - k2;
+                const float k2      = CURVE_APPROX * (vol/step - nc);
+                const float k1      = CURVE_APPROX - k2;
 
                 // Interpolate curves to the temporary buffer, translate decibels to gain
-                dsp::mix_copy2(vTmpBuf, c->data[nc], c->data[nc+1], k1, k2, c->hdots);
+                const int16_t *a    = c->data[nc];
+                const int16_t *b    = c->data[nc+1];
+                for (size_t i=0; i<c->hdots; ++i)
+                    vTmpBuf[i]      = a[i] * k1 + b[i] * k2;
+
                 dsp::exp1(vTmpBuf, c->hdots);
 
                 // Compute frequency response
                 ssize_t idx;
-                float *v    = vFreqApply;
-                range       = 1.0f / logf(c->fmax / c->fmin);
-                float kf    = float(fSampleRate) / float(fft_size);
+                float *v            = vFreqApply;
+                const float rfmin   = 1.0f / c->fmin;
+                range               = 1.0f / logf(c->fmax * rfmin);
+                const float kf      = float(fSampleRate) / float(fft_size);
                 for (size_t i=0; i < fft_csize; ++i, v += 2)
                 {
                     float f     = kf * i; // Target frequency
@@ -445,7 +451,7 @@ namespace lsp
                         idx         = c->hdots - 1;
                     else
                     {
-                        f               = logf(f / c->fmin);
+                        f               = logf(f * rfmin);
                         idx             = (f * c->hdots) * range;
                     }
 
