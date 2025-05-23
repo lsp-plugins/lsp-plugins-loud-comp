@@ -794,7 +794,7 @@ namespace lsp
 
                     // Apply input gain
                     dsp::mul_k3(c->vBuffer, c->vIn, fGain, to_process);
-                    lvl             = dsp::abs_max(c->vBuffer, samples);
+                    lvl             = dsp::abs_max(c->vBuffer, to_process);
                     c->fInLevel     = lsp_max(c->fInLevel, lvl);
                 }
 

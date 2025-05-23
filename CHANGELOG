@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.26 ===
+* Bugfix: input buffer overread.
 * Added support of minimum-phase filter mode.
 * Twice reduced the size of stored loudness curves' tables.
 
