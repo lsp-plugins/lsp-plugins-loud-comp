@@ -52,7 +52,7 @@ namespace lsp
 
             static constexpr size_t CURVE_MESH_SIZE     = 512;
 
-            static constexpr size_t FILTER_BANDS        = 48;
+            static constexpr size_t FILTER_BANDS        = 64;
 
             enum mode_t
             {

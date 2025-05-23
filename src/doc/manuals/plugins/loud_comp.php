@@ -104,6 +104,11 @@
 		<li><b>Pink Noise @ -14 LUFS</b> - pink noise at -14 LUFS, the actual 0 dB value for the K14 metering system;</li>
 		<li><b>Pink Noise @ -12 LUFS</b> - pink noise at -12 LUFS, the actual 0 dB value for the K12 metering system.</li>
 	</ul>
+	<li><b>Mode</b> - allows to switch between linear phase filter and minimum phase filter:</li>
+	<ul>
+		<li><b>FFT</b></li> - the linear phase filter mode processing using FFT transfrorm.
+		<li><b>IIR</b></li> - the minimum phase filter mode processing using digital biquad filters.
+	</ul>
 	<li><b>Contour</b> - allows to select different equal loudness contour:</li>
 	<ul>
 		<li><b>Flat</b> - applies flat frequency response to the whole spectum. Is similar to just a gain knob but useful to perform a comparison to other mode</li>
@@ -112,7 +117,11 @@
 		<li><b>Fletcher and Munson</b> - applies Fletcher and Munson (1933) contours to the signal</li>
 		<li><b>Robinson and Dadson</b> - applies Robinson and Dadson (1956) contours to the signal</li>
 	</ul>
-	<li><b>FFT</b> - allows to select size of the FFT frame used for the processing. The larger FFT frame is, the more precize the curve is approximated and the more latency the plugin introduces</li>
+	<li><b>Quality</b> - the quality of the filter curve approximation.</li>
+	<ul>
+		<li>For <b>FFT</b> mode it allows to select size of the FFT frame used for the processing. The larger FFT frame is, the more precize the curve is approximated and the more latency the plugin introduces.</li></li>
+		<li>For <b>IIR</b> mode it allows to select the number of filters and their slopes for the processing. The greater quality is set, the more filters are added and the more CPU processing is required.</li></li>
+	</ul> 
 	<li><b>Volume</b> - the output volume of the signal with applied equal loudness contour, controls the loudness of the 1 kHz pure sine wave</li>
 	<li><b>Clipping</b> - allows to enable and set the gap level for the hard clipping of the output signal</li>
 	<li><b>Reset</b> - reset leds that indicate that hard clip occured in the clipping mode</li>

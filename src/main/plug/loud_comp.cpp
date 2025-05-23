@@ -45,9 +45,25 @@ namespace lsp
             &iso226_2023_curve,
         };
 
-        static constexpr size_t BUF_SIZE        = 0x1000;
-        static constexpr size_t NUM_CURVES      = (sizeof(freq_curves)/sizeof(freq_curve_t *));
-        static constexpr float CURVE_APPROX     = 0.0005f * M_LN10;
+        static constexpr size_t EQ_SMOOTH_STEP      = 32;
+        static constexpr size_t BUF_SIZE            = 0x200;
+        static constexpr size_t NUM_CURVES          = (sizeof(freq_curves)/sizeof(freq_curve_t *));
+        static constexpr float CURVE_APPROX         = 0.0005f * M_LN10;
+
+        typedef struct approx_preset_t
+        {
+            uint8_t     nFilters;
+            uint8_t     nSlope;
+        } approx_preset_t;
+
+        static const approx_preset_t approx_presets[] =
+        {
+            { 16, 1, },
+            { 24, 2, },
+            { 32, 3, },
+            { 48, 4, },
+            { 64, 5, }
+        };
 
         //-------------------------------------------------------------------------
         // Plugin factory
@@ -72,6 +88,7 @@ namespace lsp
             nMode           = meta::loud_comp_metadata::MODE_FFT;
             nCurve          = 0;
             nRank           = meta::loud_comp_metadata::FFT_RANK_MIN;
+            nFilters        = 24;
             fGain           = 0.0f;
             fVolume         = -1.0f;
             fInLufs         = GAIN_AMP_M_INF_DB;
@@ -89,14 +106,19 @@ namespace lsp
             vFreqMesh       = NULL;
             vAmpMesh        = NULL;
             bSyncMesh       = false;
+            bSmooth         = false;
             pData           = NULL;
             pIDisplay       = NULL;
+
+            dsp::fill(vOldGains, GAIN_AMP_0_DB, meta::loud_comp_metadata::FILTER_BANDS);
+            dsp::fill(vGains, GAIN_AMP_0_DB, meta::loud_comp_metadata::FILTER_BANDS);
 
             pBypass         = NULL;
             pGain           = NULL;
             pMode           = NULL;
             pCurve          = NULL;
             pRank           = NULL;
+            pApproximation  = NULL;
             pVolume         = NULL;
             pMesh           = NULL;
             pRelative       = NULL;
@@ -234,6 +256,7 @@ namespace lsp
             BIND_PORT(pMode);
             BIND_PORT(pCurve);
             BIND_PORT(pRank);
+            BIND_PORT(pApproximation);
             BIND_PORT(pVolume);
             BIND_PORT(pReference);
             BIND_PORT(pGenerator);
@@ -285,6 +308,7 @@ namespace lsp
 
                 c->sDelay.destroy();
                 c->sProc.destroy();
+                c->sEqualizer.destroy();
                 vChannels[i]    = NULL;
             }
 
@@ -366,31 +390,48 @@ namespace lsp
             const float volume      = pVolume->value();
             const bool relative     = pRelative->value() >= 0.5f;
             const bool reference    = pReference->value() >= 0.5f;
+            const uint32_t iapprox  = pApproximation->value();
+            const uint32_t filters  = approx_presets[iapprox].nFilters;
+            const uint32_t slope    = approx_presets[iapprox].nSlope;
 
             // Need to update curve?
+            if (mode != nMode)
+            {
+                for (size_t i=0; i<nChannels; ++i)
+                {
+                    channel_t *c = vChannels[i];
+                    c->sDelay.clear();
+                    c->sProc.reset();
+                    c->sEqualizer.reset();
+                }
+            }
+
             if (mode == meta::loud_comp_metadata::MODE_FFT)
             {
-                if ((nMode != mode) || (curve != nCurve) || (rank != nRank) || (volume != fVolume))
+                if ((mode != nMode) || (curve != nCurve) || (rank != nRank) || (volume != fVolume))
                 {
                     nMode               = mode;
                     nCurve              = curve;
                     nRank               = rank;
                     fVolume             = volume;
                     bSyncMesh           = true;
+                    bSmooth             = false;
 
                     update_fft_curve();
                 }
             }
             else // mode == meta::loud_comp_metadata::MODE_IIR
             {
-                if ((nMode != mode) || (curve != nCurve) || (volume != fVolume))
+                if ((mode != nMode) || (curve != nCurve) || (filters != nFilters) || (volume != fVolume))
                 {
+                    bSmooth             = (nMode == mode) && (nCurve == curve) && (nFilters == filters);
                     nMode               = mode;
                     nCurve              = curve;
+                    nFilters            = filters;
                     fVolume             = volume;
                     bSyncMesh           = true;
 
-                    update_iir_curve();
+                    update_iir_curve(slope);
                 }
             }
 
@@ -414,9 +455,15 @@ namespace lsp
 
             if (bHClipOn)
             {
+                const float range   = dspu::db_to_gain(pHClipRange->value());
                 float min, max;
-                dsp::abs_minmax(vFreqApply, 2 << nRank, &min, &max);
-                fHClipLvl           = dspu::db_to_gain(pHClipRange->value()) * sqrtf(min * max);
+                if (nMode == meta::loud_comp_metadata::MODE_FFT)
+                {
+                    dsp::abs_minmax(vFreqApply, 2 << nRank, &min, &max);
+                    fHClipLvl           = range * sqrtf(min * max);
+                }
+                else
+                    fHClipLvl           = range * dsp::max(vGains, nFilters);
             }
             else
                 fHClipLvl           = 1.0f;
@@ -524,19 +571,18 @@ namespace lsp
             }
         }
 
-        void loud_comp::update_iir_curve()
+        void loud_comp::update_iir_curve(uint32_t slope)
         {
             const freq_curve_t *c   = ((nCurve > 0) && (nCurve <= NUM_CURVES)) ? freq_curves[nCurve-1] : NULL;
             float *freqs            = vTmpBuf;
-            float *gains            = vFreqApply;
 
             if (c != NULL)
             {
                 // Generate the list of frequencies
                 const float rfmin   = 1.0f / c->fmin;
                 const float df      = logf(c->fmax * rfmin);
-                const float kf      = df / (meta::loud_comp_metadata::FILTER_BANDS - 1);
-                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                const float kf      = df / (nFilters - 1);
+                for (size_t i=0; i < nFilters; ++i)
                     freqs[i]            = c->fmin * expf((i + 0.5f) * kf);
 
                 // Get the volume
@@ -557,7 +603,7 @@ namespace lsp
                 const int16_t *b    = c->data[nc+1];
                 const float kdf     = (c->hdots - 1) / df;
 
-                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                for (size_t i=0; i < nFilters; ++i)
                 {
                     const float f       = c->fmin * expf(i * kf);
                     if (f <= c->fmin)
@@ -567,27 +613,27 @@ namespace lsp
                     else
                         idx                 = logf(f * rfmin) * kdf;
 
-                    if (idx >= ssize_t(c->hdots))
-                        lsp_trace("debug");
-
-                    gains[i]            = expf(a[idx] * k1 + b[idx] * k2);
+                    vGains[i]           = expf(a[idx] * k1 + b[idx] * k2);
                 }
             }
             else
             {
                 const float df      = logf(SPEC_FREQ_MAX / SPEC_FREQ_MIN);
-                const float kf      = df / (meta::loud_comp_metadata::FILTER_BANDS - 1);
-                for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
+                const float kf      = df / (nFilters - 1);
+                for (size_t i=0; i < nFilters; ++i)
                     freqs[i]            = SPEC_FREQ_MIN * expf((i + 0.5f) * kf);
 
                 const float vol     = dspu::db_to_gain(fVolume);
-                dsp::fill(gains, vol, meta::loud_comp_metadata::FILTER_BANDS);
+                dsp::fill(vGains, vol, nFilters);
             }
+
+            if (!bSmooth)
+                dsp::copy(vOldGains, vGains, nFilters);
 
             // Configure equalizer
             dspu::filter_params_t fp;
             fp.nType            = dspu::FLT_NONE;
-            fp.nSlope           = 4;
+            fp.nSlope           = slope;
             fp.fFreq            = 0.0f;
             fp.fFreq2           = 0.0f;
             fp.fGain            = GAIN_AMP_0_DB;
@@ -595,13 +641,15 @@ namespace lsp
 
             for (size_t i=0; i < meta::loud_comp_metadata::FILTER_BANDS; ++i)
             {
-                if (i == 0) // Low-shelf
+                if (i >= nFilters) // Disabled filter
+                    fp.nType        = dspu::FLT_NONE;
+                else if (i == 0) // Low-shelf
                 {
                     fp.nType        = dspu::FLT_BT_LRX_LOSHELF;
                     fp.fFreq        = freqs[0];
                     fp.fFreq2       = fp.fFreq;
                 }
-                else if (i < meta::loud_comp_metadata::FILTER_BANDS - 1) // Ladder-pass
+                else if (i < nFilters - 1) // Ladder-pass
                 {
                     fp.nType        = dspu::FLT_BT_LRX_LADDERPASS;
                     fp.fFreq        = freqs[i-1];
@@ -614,7 +662,7 @@ namespace lsp
                     fp.fFreq2       = fp.fFreq;
                 }
 
-                fp.fGain        = gains[i];
+                fp.fGain        = vGains[i];
 
                 for (size_t j=0; j<nChannels; ++j)
                     vChannels[j]->sEqualizer.set_params(i, &fp);
@@ -697,6 +745,37 @@ namespace lsp
             }
         }
 
+        void loud_comp::process_iir_equalizer(channel_t *c, size_t samples)
+        {
+            // Process the signal by the equalizer
+            if (bSmooth)
+            {
+                dspu::filter_params_t fp;
+                const float den   = 1.0f / samples;
+
+                // In smooth mode, we need to update filter parameters for each sample
+                for (size_t offset=0; offset<samples; )
+                {
+                    const size_t count          = lsp_min(samples - offset, EQ_SMOOTH_STEP);
+                    const float k               = float(offset) * den;
+
+                    // Tune filters
+                    for (size_t j=0; j < nFilters; ++j)
+                    {
+                        c->sEqualizer.get_params(j, &fp);
+                        fp.fGain                    = vOldGains[j] * expf(logf(vGains[j] / vOldGains[j])*k);
+                        c->sEqualizer.set_params(j, &fp);
+                    }
+
+                    // Apply processing
+                    c->sEqualizer.process(&c->vBuffer[offset], &c->vBuffer[offset], count);
+                    offset                     += count;
+                }
+            }
+            else
+                c->sEqualizer.process(c->vBuffer, c->vBuffer, samples);
+        }
+
         void loud_comp::process_audio(size_t samples)
         {
             float lvl;
@@ -735,7 +814,7 @@ namespace lsp
                     if (nMode == meta::loud_comp_metadata::MODE_FFT)
                         c->sProc.process(c->vBuffer, c->vBuffer, to_process);
                     else
-                        c->sEqualizer.process(c->vBuffer, c->vBuffer, to_process);
+                        process_iir_equalizer(c, to_process);
 
                     // Perform clipping
                     lvl             = dsp::abs_max(c->vBuffer, to_process);
@@ -764,6 +843,13 @@ namespace lsp
 
                     // Apply bypass
                     c->sBypass.process(c->vOut, c->vDry, c->vBuffer, to_process);
+                }
+
+                // Reset smooth flag for equalizer
+                if (bSmooth)
+                {
+                    dsp::copy(vOldGains, vGains, nFilters);
+                    bSmooth             = false;
                 }
 
                 // Measure output loudness
@@ -989,6 +1075,7 @@ namespace lsp
             v->write("nMode", nMode);
             v->write("nCurve", nCurve);
             v->write("nRank", nRank);
+            v->write("nApproximation", nFilters);
             v->write("fGain", fGain);
             v->write("fInLufs", fInLufs);
             v->write("fOutLufs", fOutLufs);
@@ -1031,7 +1118,11 @@ namespace lsp
             v->write("vFreqMesh", vFreqMesh);
             v->write("vAmpMesh", vAmpMesh);
             v->write("bSyncMesh", bSyncMesh);
+            v->write("bSmooth", bSmooth);
             v->write("pIDisplay", pIDisplay);
+
+            v->writev("vOldGains", vOldGains, meta::loud_comp_metadata::FILTER_BANDS);
+            v->writev("vGains", vGains, meta::loud_comp_metadata::FILTER_BANDS);
 
             v->write_object("sOsc", &sOsc);
             v->write_object("sInMeter", &sInMeter);
@@ -1043,6 +1134,7 @@ namespace lsp
             v->write("pGain", pGain);
             v->write("pCurve", pCurve);
             v->write("pRank", pRank);
+            v->write("pApproximation", pApproximation);
             v->write("pVolume", pVolume);
             v->write("pMesh", pMesh);
             v->write("pRelative", pRelative);

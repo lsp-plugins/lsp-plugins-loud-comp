@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.26 ===
+* Added support of minimum-phase filter mode.
 * Twice reduced the size of stored loudness curves' tables.
 
 === 1.0.25 ===

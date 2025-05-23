@@ -19,6 +19,13 @@
 		"mode": {
 			"iir": "IIR",
 			"fft": "FFT"
+		},
+		"quality": {
+			"best": "Best",
+			"fastest": "Fastest",
+			"high": "High",
+			"low": "Low",
+			"normal": "Normal"
 		}
 	}
 }

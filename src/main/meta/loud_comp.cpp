@@ -49,6 +49,16 @@ namespace lsp
             { NULL, NULL }
         };
 
+        static const port_item_t loud_comp_approximation[] =
+        {
+            { "Fastest",            "lcomp.quality.fastest" },
+            { "Low",                "lcomp.quality.low" },
+            { "Normal",             "lcomp.quality.normal" },
+            { "High",               "lcomp.quality.high" },
+            { "Best",               "lcomp.quality.best" },
+            { NULL, NULL }
+        };
+
         static const port_item_t loud_comp_fft_rank[] =
         {
             { "256",    NULL },
@@ -88,6 +98,7 @@ namespace lsp
             COMBO("mode", "Processing mode", "Mode", 0, loud_comp_mode), \
             COMBO("std", "Loudness contour standard", "Standard", loud_comp_metadata::STD_DFL, loud_comp_std), \
             COMBO("fft", "FFT size", "FFT size", loud_comp_metadata::FFT_RANK_IDX_DFL, loud_comp_fft_rank), \
+            COMBO("approx", "IIR approximation", "Approximation", 2, loud_comp_approximation), \
             CONTROL("volume", "Output volume", "Out volume", U_DB, loud_comp_metadata::PHONS), \
             SWITCH("refer", "Enable reference generator", "Reference", 0.0f), \
             COMBO("reftype", "Type of reference generator", "Ref type", 2.0f, loud_comp_generator), \
