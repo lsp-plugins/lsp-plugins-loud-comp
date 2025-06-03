@@ -56,7 +56,7 @@
 	volume settings may	cause unexpected (sometimes horrible) sounding of the mix at the maximum loudness.
 </p>
 <p>
-	To avoid this, the calibration of the audio system is peformed, so the digital signal with the maximized
+	To avoid this, the calibration of the audio system is performed, so the digital signal with the maximized
 	loudness gives a 83 dB SPL level at the output. The 83 Phon equal loudness curve (can be linerarly
 	approximated from other curves on the figure) is considered having flat frequency response, frequency
 	responses for other	SPL levels are computed by subtracting the corresponding equal loudness curve from the
@@ -71,7 +71,7 @@
 <p><b>Preparing the sound system for work.</b></p>
 <p>
 	The plugin assumes the 83 phon equal loudness curve being a flat frequency response. For that case the
-	audio system needs to be callibrated for the 83 dB output loudness. The plugin can generate a 0 dBFS sine wave 
+	audio system needs to be calibrated for the 83 dB output loudness. The plugin can generate a 0 dBFS sine wave 
 	digital reference signal at 1000 Hz which can be reproduced by the audio system and measured by the SPL meter.
 </p>
 <p>
@@ -93,7 +93,7 @@
 <ul>
 	<li><b>Bypass</b> - bypass switch, when turned on (led indicator is shining), the plugin bypasses signal.</li>
 	<li><b>Input</b> - the input gain settings, allows to adjust the level of the input signal to the desired level.</li>
-	<li><b>Reference</b> - turns on the reference signal for callibration purposes.</li>
+	<li><b>Reference</b> - turns on the reference signal for calibration purposes.</li>
 	<li><b>Reference type combo</b> - allows to select the type of the reference signal:</li>
 	<ul>
 		<li><b>Sine @ 1kHz 0 dBFS</b> - the pure sine wave at 1000 Hz frequency and 0 dBFS amplitude, fully reflects the same value in phons;</li>
@@ -111,7 +111,7 @@
 	</ul>
 	<li><b>Contour</b> - allows to select different equal loudness contour:</li>
 	<ul>
-		<li><b>Flat</b> - applies flat frequency response to the whole spectum. Is similar to just a gain knob but useful to perform a comparison to other mode</li>
+		<li><b>Flat</b> - applies flat frequency response to the whole spectrum. Is similar to just a gain knob but useful to perform a comparison to other mode</li>
 		<li><b>ISO 226:2003</b> - applies recent ISO 226-2003 contours to the signal</li>
 		<li><b>ISO 226:2023</b> - applies recent ISO 226-2023 contours to the signal</li>
 		<li><b>Fletcher and Munson</b> - applies Fletcher and Munson (1933) contours to the signal</li>
@@ -119,12 +119,12 @@
 	</ul>
 	<li><b>Quality</b> - the quality of the filter curve approximation.</li>
 	<ul>
-		<li>For <b>FFT</b> mode it allows to select size of the FFT frame used for the processing. The larger FFT frame is, the more precize the curve is approximated and the more latency the plugin introduces.</li></li>
+		<li>For <b>FFT</b> mode it allows to select size of the FFT frame used for the processing. The larger FFT frame is, the more precise the curve is approximated and the more latency the plugin introduces.</li></li>
 		<li>For <b>IIR</b> mode it allows to select the number of filters and their slopes for the processing. The greater quality is set, the more filters are added and the more CPU processing is required.</li></li>
 	</ul> 
 	<li><b>Volume</b> - the output volume of the signal with applied equal loudness contour, controls the loudness of the 1 kHz pure sine wave</li>
 	<li><b>Clipping</b> - allows to enable and set the gap level for the hard clipping of the output signal</li>
-	<li><b>Reset</b> - reset leds that indicate that hard clip occured in the clipping mode</li>
+	<li><b>Reset</b> - reset leds that indicate that hard clip occurred in the clipping mode</li>
 	<li><b>Relative</b> - draws the frequency response in relative to the loudness mode when enabled</li>
 </ul>
 
