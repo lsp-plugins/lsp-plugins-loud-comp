@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2023 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2023 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -26,6 +26,7 @@
 #include <lsp-plug.in/plug-fw/core/IDBuffer.h>
 #include <lsp-plug.in/dsp-units/ctl/Blink.h>
 #include <lsp-plug.in/dsp-units/ctl/Bypass.h>
+#include <lsp-plug.in/dsp-units/filters/Equalizer.h>
 #include <lsp-plug.in/dsp-units/meters/LoudnessMeter.h>
 #include <lsp-plug.in/dsp-units/noise/Generator.h>
 #include <lsp-plug.in/dsp-units/util/Delay.h>
@@ -57,6 +58,7 @@ namespace lsp
                     dspu::Bypass            sBypass;    // Bypass
                     dspu::Delay             sDelay;     // Delay (for bypass)
                     dspu::SpectralProcessor sProc;      // Spectral processor
+                    dspu::Equalizer         sEqualizer; // Equalizer
                     dspu::Blink             sClipInd;   // Clip blink
 
                     plug::IPort            *pIn;        // Input port
@@ -78,9 +80,11 @@ namespace lsp
                 };
 
             protected:
-                size_t                  nChannels;      // Number of channels
-                size_t                  nMode;          // Current curve mode
-                size_t                  nRank;          // Current FFT rank
+                uint32_t                nChannels;      // Number of channels
+                uint32_t                nMode;          // Operating mode
+                uint32_t                nCurve;         // Currently selected curve
+                uint32_t                nRank;          // Current FFT rank
+                uint32_t                nFilters;       // Number of filters
                 float                   fGain;          // Input gain
                 float                   fVolume;        // Volume
                 float                   fInLufs;        // Input LUFS
@@ -97,8 +101,11 @@ namespace lsp
                 float                  *vFreqMesh;      // List of frequencies for the mesh
                 float                  *vAmpMesh;       // List of amplitudes for the mesh
                 bool                    bSyncMesh;      // Synchronize mesh response with UI
+                bool                    bSmooth;        // Smooth mode of equalizer
                 core::IDBuffer         *pIDisplay;      // Inline display buffer
 
+                float                   vOldGains[meta::loud_comp_metadata::FILTER_BANDS];
+                float                   vGains[meta::loud_comp_metadata::FILTER_BANDS];
                 dspu::Oscillator        sOsc;           // Oscillator for reference sound
                 dspu::NoiseGenerator    sNoise;         // Pink noise generator
                 dspu::LoudnessMeter     sInMeter;       // Input loudness meter
@@ -108,8 +115,10 @@ namespace lsp
 
                 plug::IPort            *pBypass;        // Bypass
                 plug::IPort            *pGain;          // Input gain
-                plug::IPort            *pMode;          // Curve mode selector
+                plug::IPort            *pMode;          // Operating mode
+                plug::IPort            *pCurve;         // Curve selector
                 plug::IPort            *pRank;          // FFT rank selector
+                plug::IPort            *pApproximation; // IIR approximation
                 plug::IPort            *pVolume;        // Output volume
                 plug::IPort            *pMesh;          // Output mesh response
                 plug::IPort            *pRelative;      // Relative mesh display
@@ -122,9 +131,14 @@ namespace lsp
                 plug::IPort            *pHClipReset;    // Hard clipping reset
 
             protected:
-                void                update_response_curve();
+                void                update_fft_curve();
+                void                update_iir_curve(uint32_t slope);
                 void                process_spectrum(channel_t *c, float *buf);
+                void                generate_signal(size_t samples);
+                void                process_audio(size_t samples);
+                void                generate_frequencies();
                 void                do_destroy();
+                void                process_iir_equalizer(channel_t *c, size_t samples);
 
             protected:
                 static void         process_callback(void *object, void *subject, float *buf, size_t rank);
