@@ -2,6 +2,9 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.27 ===
+
+
 === 1.0.26 ===
 * Bugfix: input buffer overread.
 * Added support of minimum-phase filter mode.
