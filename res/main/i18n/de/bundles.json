@@ -1,7 +1,11 @@
 {
 	"loud_comp": {
-		"name": "Loudness Compensation",
-		"description": "Dieses Plugin wendet Loudness-Kontur-Korrekturen, \ndefiniert durch die ISO 226:2003 abhängig von der Ausgangslautstärke an.\nZudem kann es als Gehörschutzmaßnahme dienen, indem es das Ausgangssignal \nkappt, sollte es ein bestimmtes Level überschreiten."
+		"description": "Dieses Plugin wendet Loudness-Kontur-Korrekturen, \ndefiniert durch die ISO 226:2023 abhängig von der Ausgangslautstärke an.\nZudem kann es als Gehörschutzmaßnahme dienen, indem es das Ausgangssignal \nkappt, sollte es ein bestimmtes Level überschreiten.",
+		"name": "Loudness Compensation"
+	},
+	"launcher": {
+		"loud_comp_mono": "Mono",
+		"loud_comp_stereo": "Stereo"
 	}
 }
 

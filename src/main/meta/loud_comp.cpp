@@ -142,7 +142,7 @@ namespace lsp
             "Loudness Compensator",
             B_UTILITIES,
             "CuySiF1VSj8",
-            "This plugin applies equal loudness contour corrections defined by ISO 226:2003\nstandard to the input signal depending on the output volume settings.\nAdditionally it can provide ear protection by applying hard-clipping to the\noutput signal if it exceeds the allowed configurable level."
+            "This plugin applies equal loudness contour corrections defined by ISO 226:2023\nstandard to the input signal depending on the output volume settings.\nAdditionally it can provide ear protection by applying hard-clipping to the\noutput signal if it exceeds the allowed configurable level."
         };
 
         // Loudness Compensator
