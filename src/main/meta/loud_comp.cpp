@@ -170,7 +170,7 @@ namespace lsp
             clap_features_mono,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_mono_ports,
-            "util/loud_comp.xml",
+            "plugins/util/loud_comp.xml",
             NULL,
             mono_plugin_port_groups,
             &loud_comp_bundle
@@ -201,7 +201,7 @@ namespace lsp
             clap_features_stereo,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_stereo_ports,
-            "util/loud_comp.xml",
+            "plugins/util/loud_comp.xml",
             NULL,
             stereo_plugin_port_groups,
             &loud_comp_bundle
