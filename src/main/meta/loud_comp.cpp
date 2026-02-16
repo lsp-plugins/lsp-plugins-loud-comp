@@ -173,7 +173,8 @@ namespace lsp
             "plugins/util/loud_comp.xml",
             NULL,
             mono_plugin_port_groups,
-            &loud_comp_bundle
+            &loud_comp_bundle,
+            2
         };
         LSP_REGISTER_METADATA(loud_comp_mono);
 
@@ -204,7 +205,8 @@ namespace lsp
             "plugins/util/loud_comp.xml",
             NULL,
             stereo_plugin_port_groups,
-            &loud_comp_bundle
+            &loud_comp_bundle,
+            1
         };
         LSP_REGISTER_METADATA(loud_comp_stereo);
 
