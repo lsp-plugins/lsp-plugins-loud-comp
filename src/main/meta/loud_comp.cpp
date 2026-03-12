@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -20,12 +20,13 @@
  */
 
 #include <lsp-plug.in/plug-fw/meta/ports.h>
+#include <lsp-plug.in/plug-fw/meta/registry.h>
 #include <lsp-plug.in/shared/meta/developers.h>
 #include <private/meta/loud_comp.h>
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MAJOR       1
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MINOR       0
-#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       29
+#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       30
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION  \
     LSP_MODULE_VERSION( \
@@ -141,7 +142,7 @@ namespace lsp
             "Loudness Compensator",
             B_UTILITIES,
             "CuySiF1VSj8",
-            "This plugin applies equal loudness contour corrections defined by ISO 226:2003\nstandard to the input signal depending on the output volume settings.\nAdditionally it can provide ear protection by applying hard-clipping to the\noutput signal if it exceeds the allowed configurable level."
+            "This plugin applies equal loudness contour corrections defined by ISO 226:2023\nstandard to the input signal depending on the output volume settings.\nAdditionally it can provide ear protection by applying hard-clipping to the\noutput signal if it exceeds the allowed configurable level."
         };
 
         // Loudness Compensator
@@ -169,11 +170,13 @@ namespace lsp
             clap_features_mono,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_mono_ports,
-            "util/loud_comp.xml",
+            "plugins/util/loud_comp.xml",
             NULL,
             mono_plugin_port_groups,
-            &loud_comp_bundle
+            &loud_comp_bundle,
+            2
         };
+        LSP_REGISTER_METADATA(loud_comp_mono);
 
         const meta::plugin_t  loud_comp_stereo =
         {
@@ -199,10 +202,13 @@ namespace lsp
             clap_features_stereo,
             E_INLINE_DISPLAY | E_DUMP_STATE,
             loud_comp_stereo_ports,
-            "util/loud_comp.xml",
+            "plugins/util/loud_comp.xml",
             NULL,
             stereo_plugin_port_groups,
-            &loud_comp_bundle
+            &loud_comp_bundle,
+            1
         };
+        LSP_REGISTER_METADATA(loud_comp_stereo);
+
     } // namespace meta
 } // namespace lsp
