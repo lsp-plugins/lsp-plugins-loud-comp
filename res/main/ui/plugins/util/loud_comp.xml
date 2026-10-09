@@ -18,9 +18,14 @@
 			<hbox spacing="4" bg.color="bg_schema" pad.h="6">
 				<button id="refer" text="labels.signal.reference" ui:inject="Button_yellow" width="62" pad.v="4" vreduce="true"/>
 				<combo id="reftype" pad.l="4" />
-				<!-- <vsep pad.h="2" bg.color="bg" hreduce="true"/> -->
 				<void expand="true"/>
+				
 				<vsep pad.h="2" bg.color="bg" hreduce="true"/>
+				
+				<button id="comp" text="labels.signal.compensate" ui:inject="Button_green" pad.v="4"/>
+				
+				<vsep pad.h="2" bg.color="bg" hreduce="true"/>
+				
 				<button id="relspec" text="labels.signal.relative" size="16" ui:inject="Button_green"/>
 				<label text="labels.mode:" pad.l="4" />
 				<combo id="mode"/>
@@ -208,12 +213,16 @@
 
 		<!-- c7 -->
 		<cell rows="3">
-			<grid rows="2" cols="3">
+			<grid rows="2" cols="5">
 				<label text="labels.chan.out" pad.t="4" vreduce="true"/>
 				<cell rows="2">
 					<void pad.h="2" bg.color="bg" hreduce="true"/>
 				</cell>
 				<label text="labels.units.lufs" pad.t="4" pad.h="4"/>
+				<cell rows="2">
+					<void pad.h="2" bg.color="bg" hreduce="true"/>
+				</cell>
+				<label text="labels.gain" pad.t="4" pad.h="4"/>
 
 				<ui:if test="ex :olm">
 					<ledmeter vexpand="true" angle="1" height.min="15" fill="true">
@@ -229,6 +238,15 @@
 
 				<ledmeter vexpand="true" angle="1">
 					<ledchannel id="lufs_ol" min="-72" max="6" type="peak" log="false" value.color="lufs"/>
+				</ledmeter>
+				
+				<ledmeter vexpand="true" angle="1">
+					<ledchannel
+						id="gain" type="peak"
+						log="true"
+						min="-72 db" max="12 db" balance="0 db"
+						balance.visibility="true"
+						value.color="blue" />
 				</ledmeter>
 			</grid>
 		</cell>

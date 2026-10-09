@@ -89,6 +89,8 @@ namespace lsp
                 float                   fVolume;        // Volume
                 float                   fInLufs;        // Input LUFS
                 float                   fOutLufs;       // Output LUFS
+                float                   fOutGain;       // Output gain
+                float                   fCompGain;      // Compensation gain
                 generator_t             enGenerator;    // Generator type
                 bool                    bBypass;        // Bypass
                 bool                    bRelative;      // Display relative curve instead of absolute
@@ -129,6 +131,8 @@ namespace lsp
                 plug::IPort            *pHClipOn;       // Enable Hard clip
                 plug::IPort            *pHClipRange;    // Hard clipping range
                 plug::IPort            *pHClipReset;    // Hard clipping reset
+                plug::IPort            *pCompensate;    // Compensate gain adjustment
+                plug::IPort            *pGainMeter;     // Output gain meter
 
             protected:
                 void                update_fft_curve();

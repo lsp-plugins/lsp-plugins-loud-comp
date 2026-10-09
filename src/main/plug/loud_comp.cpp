@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -93,6 +93,8 @@ namespace lsp
             fVolume         = -1.0f;
             fInLufs         = GAIN_AMP_M_INF_DB;
             fOutLufs        = GAIN_AMP_M_INF_DB;
+            fOutGain        = GAIN_AMP_0_DB;
+            fCompGain       = GAIN_AMP_0_DB;
             enGenerator     = GEN_PINK_M20LUFS;
             bBypass         = false;
             bRelative       = false;
@@ -129,6 +131,8 @@ namespace lsp
             pHClipOn        = NULL;
             pHClipRange     = NULL;
             pHClipReset     = NULL;
+            pCompensate     = NULL;
+            pGainMeter      = NULL;
         }
 
         loud_comp::~loud_comp()
@@ -267,6 +271,8 @@ namespace lsp
             BIND_PORT(pRelative);
             BIND_PORT(pLufsIn);
             BIND_PORT(pLufsOut);
+            BIND_PORT(pCompensate);
+            BIND_PORT(pGainMeter);
 
             // Bind input level meters
             for (size_t i=0; i<nChannels; ++i)
@@ -279,7 +285,6 @@ namespace lsp
             // Bind output level meters
             for (size_t i=0; i<nChannels; ++i)
                 BIND_PORT(vChannels[i]->pMeterOut);
-
         }
 
         void loud_comp::destroy()
@@ -337,7 +342,7 @@ namespace lsp
 
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c        = vChannels[i];
+                channel_t * const c     = vChannels[i];
 
                 // Update processor settings
                 c->sBypass.init(sr);
@@ -393,13 +398,14 @@ namespace lsp
             const uint32_t iapprox  = pApproximation->value();
             const uint32_t filters  = approx_presets[iapprox].nFilters;
             const uint32_t slope    = approx_presets[iapprox].nSlope;
+            const bool compensate   = pCompensate->value() >= 0.5f;
 
             // Need to update curve?
             if (mode != nMode)
             {
                 for (size_t i=0; i<nChannels; ++i)
                 {
-                    channel_t *c = vChannels[i];
+                    channel_t * const c     = vChannels[i];
                     c->sDelay.clear();
                     c->sProc.reset();
                     c->sEqualizer.reset();
@@ -434,6 +440,8 @@ namespace lsp
                     update_iir_curve(slope);
                 }
             }
+
+            fCompGain           = (compensate) ? 1.0f / fOutGain : GAIN_AMP_0_DB;
 
             if (reference != bReference)
                 sOsc.reset_phase_accumulator();
@@ -544,18 +552,15 @@ namespace lsp
 
                 // Create reverse copy to complete the FFT response
                 dsp::reverse2(&vFreqApply[fft_size+2], &vFreqApply[2], fft_size-2);
-
-                if (fft_size == 256)
-                {
-                    for (size_t i=0; i<fft_size; ++i)
-                        lsp_trace("i=%d; vfa={%.2f, %.2f}", int(i), vFreqApply[i*2], vFreqApply[i*2+1]);
-                }
             }
             else
             {
                 const float vol     = dspu::db_to_gain(fVolume);
                 dsp::fill(vFreqApply, vol, fft_size * 2);
             }
+
+            // Compute output gain
+            fOutGain            = dsp::max(vFreqApply, fft_csize);
 
             // Initialize list of frequencies
             generate_frequencies();
@@ -629,6 +634,9 @@ namespace lsp
 
             if (!bSmooth)
                 dsp::copy(vOldGains, vGains, nFilters);
+
+            // Compute output gain
+            fOutGain            = dsp::max(vGains, nFilters);
 
             // Configure equalizer
             dspu::filter_params_t fp;
@@ -808,13 +816,17 @@ namespace lsp
                 // Do the loudness compensation
                 for (size_t i=0; i<nChannels; ++i)
                 {
-                    channel_t *c    = vChannels[i];
+                    channel_t * const c = vChannels[i];
 
                     // Apply volume attenuation
                     if (nMode == meta::loud_comp_metadata::MODE_FFT)
                         c->sProc.process(c->vBuffer, c->vBuffer, to_process);
                     else
                         process_iir_equalizer(c, to_process);
+
+                    // Apply gain compensation
+                    if (fCompGain != GAIN_AMP_0_DB)
+                        dsp::mul_k2(c->vBuffer, fCompGain, to_process);
 
                     // Perform clipping
                     lvl             = dsp::abs_max(c->vBuffer, to_process);
@@ -862,7 +874,7 @@ namespace lsp
                 // Update sample counter and pointers
                 for (size_t i=0; i<nChannels; ++i)
                 {
-                    channel_t *c    = vChannels[i];
+                    channel_t * const c = vChannels[i];
 
                     // Update pointers
                     c->vIn         += to_process;
@@ -898,13 +910,14 @@ namespace lsp
             // Update meters
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c    = vChannels[i];
+                channel_t * const c     = vChannels[i];
                 c->pMeterIn->set_value(c->fInLevel);
                 c->pMeterOut->set_value(c->fOutLevel);
             }
             pLufsIn->set_value(dspu::gain_to_lufs(fInLufs));
             const float out_lufs = dspu::gain_to_lufs(fOutLufs);
             pLufsOut->set_value(out_lufs);
+            pGainMeter->set_value(fOutGain);
 
             // Report latency
             set_latency(vChannels[0]->sDelay.get_delay());
@@ -1079,6 +1092,8 @@ namespace lsp
             v->write("fGain", fGain);
             v->write("fInLufs", fInLufs);
             v->write("fOutLufs", fOutLufs);
+            v->write("fOutGain", fOutGain);
+            v->write("fCompGain", fCompGain);
             v->write("bBypass", bBypass);
             v->write("bRelative", bRelative);
             v->write("bReference", bReference);
@@ -1087,7 +1102,7 @@ namespace lsp
             v->begin_array("vChannels", vChannels, nChannels);
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c = vChannels[i];
+                const channel_t * const c = vChannels[i];
                 v->begin_object(c, sizeof(channel_t));
                 {
                     v->write("vIn", c->vIn);
@@ -1144,6 +1159,8 @@ namespace lsp
             v->write("pHClipOn", pHClipOn);
             v->write("pHClipRange", pHClipRange);
             v->write("pHClipReset", pHClipReset);
+            v->write("pCompensate", pCompensate);
+            v->write("pGainMeter", pGainMeter);
         }
     } /* namespace plugins */
 } /* namespace lsp */
