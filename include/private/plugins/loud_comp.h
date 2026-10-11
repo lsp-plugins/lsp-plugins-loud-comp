@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -157,6 +157,7 @@ namespace lsp
                 virtual void        destroy() override;
 
             public:
+                virtual void        activated() override;
                 virtual void        ui_activated() override;
                 virtual void        update_sample_rate(long sr) override;
                 virtual void        update_settings() override;

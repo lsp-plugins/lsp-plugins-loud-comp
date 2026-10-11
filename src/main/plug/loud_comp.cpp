@@ -328,6 +328,21 @@ namespace lsp
             }
         }
 
+        void loud_comp::activated()
+        {
+            sInMeter.clear();
+            sOutMeter.clear();
+
+            for (size_t i=0; i<nChannels; ++i)
+            {
+                channel_t * const c     = vChannels[i];
+
+                c->sDelay.clear();
+                c->sProc.reset();
+                c->sEqualizer.reset();
+            }
+        }
+
         void loud_comp::ui_activated()
         {
             bSyncMesh           = true;
