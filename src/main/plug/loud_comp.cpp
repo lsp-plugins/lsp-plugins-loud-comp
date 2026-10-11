@@ -803,14 +803,18 @@ namespace lsp
         {
             float lvl;
 
+            lsp_trace("samples=%d", int(samples));
+
             for (size_t offset = 0; offset < samples; )
             {
-                size_t to_process   = lsp_min(samples - offset, BUF_SIZE);
+                const size_t to_process     = lsp_min(samples - offset, BUF_SIZE);
+
+                lsp_trace("offset=%d, to_process=%d", int(offset), int(to_process));
 
                 // Pre-process input signal
                 for (size_t i=0; i<nChannels; ++i)
                 {
-                    channel_t *c    = vChannels[i];
+                    channel_t * const c = vChannels[i];
 
                     // Process the signal
                     c->sDelay.process(c->vDry, c->vIn, to_process);
@@ -905,11 +909,11 @@ namespace lsp
             // Bind ports
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c    = vChannels[i];
-                c->vIn          = c->pIn->buffer<float>();
-                c->vOut         = c->pOut->buffer<float>();
-                c->fInLevel     = 0.0f;
-                c->fOutLevel    = 0.0f;
+                channel_t * const c = vChannels[i];
+                c->vIn              = c->pIn->buffer<float>();
+                c->vOut             = c->pOut->buffer<float>();
+                c->fInLevel         = 0.0f;
+                c->fOutLevel        = 0.0f;
             }
             fInLufs         = GAIN_AMP_M_INF_DB;
             fOutLufs        = GAIN_AMP_M_INF_DB;
