@@ -85,12 +85,12 @@ namespace lsp
         loud_comp::loud_comp(const meta::plugin_t *metadata, size_t channels): plug::Module(metadata)
         {
             nChannels       = channels;
-            nMode           = meta::loud_comp_metadata::MODE_FFT;
+            nMode           = uint32_t(-1);
             nCurve          = 0;
-            nRank           = meta::loud_comp_metadata::FFT_RANK_MIN;
-            nFilters        = 24;
+            nRank           = 0;
+            nFilters        = 0;
             fGain           = 0.0f;
-            fVolume         = -1.0f;
+            fVolume         = 0.0f;
             fInLufs         = GAIN_AMP_M_INF_DB;
             fOutLufs        = GAIN_AMP_M_INF_DB;
             fOutGain        = GAIN_AMP_0_DB;
@@ -195,7 +195,7 @@ namespace lsp
             // Allocate channels
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c        = advance_ptr_bytes<channel_t>(ptr, sz_channel);
+                channel_t * const c = advance_ptr_bytes<channel_t>(ptr, sz_channel);
 
                 c->sDelay.construct();
                 c->sBypass.construct();
@@ -350,6 +350,13 @@ namespace lsp
 
         void loud_comp::update_sample_rate(long sr)
         {
+            // Force curve settings to be updated
+            nMode           = uint32_t(-1);
+            nCurve          = 0;
+            nRank           = 0;
+            nFilters        = 0;
+
+            // Set sample rates for processors
             sOsc.set_sample_rate(sr);
             sNoise.set_sample_rate(sr);
             sInMeter.set_sample_rate(sr);
@@ -438,6 +445,9 @@ namespace lsp
                     bSyncMesh           = true;
                     bSmooth             = false;
 
+                    lsp_trace("updating FFT curve mode=%d, curve=%d, rank=%d, volume=%f, sync_mesh=%s",
+                        int(nMode), int(nCurve), int(nRank), fVolume,
+                        (bSyncMesh) ? "true" : "false");
                     update_fft_curve();
                 }
             }
@@ -452,6 +462,9 @@ namespace lsp
                     fVolume             = volume;
                     bSyncMesh           = true;
 
+                    lsp_trace("updating IIR curve mode=%d, curve=%d, rank=%d, volume=%f, sync_mesh=%s",
+                        int(nMode), int(nCurve), int(nRank), fVolume,
+                        (bSyncMesh) ? "true" : "false");
                     update_iir_curve(slope);
                 }
             }
@@ -493,7 +506,7 @@ namespace lsp
 
             for (size_t i=0; i<nChannels; ++i)
             {
-                channel_t *c            = vChannels[i];
+                channel_t * const c     = vChannels[i];
                 const size_t latency    = (nMode == meta::loud_comp_metadata::MODE_FFT) ? c->sProc.latency() : c->sEqualizer.get_latency();
 
                 c->sBypass.set_bypass(bypass);
@@ -701,15 +714,15 @@ namespace lsp
 
         void loud_comp::process_callback(void *object, void *subject, float *buf, size_t rank)
         {
-            loud_comp *_this   = static_cast<loud_comp *>(object);
-            channel_t *c            = static_cast<channel_t *>(subject);
-            _this->process_spectrum(c, buf);
+            loud_comp * const self  = static_cast<loud_comp *>(object);
+            channel_t * const c  	= static_cast<channel_t *>(subject);
+            self->process_spectrum(c, buf);
         }
 
         void loud_comp::process_spectrum(channel_t *c, float *buf)
         {
             // Apply spectrum changes to the FFT image
-            size_t count = 2 << nRank;
+            const size_t count = 2 << nRank;
             dsp::mul2(buf, vFreqApply, count);
         }
 
@@ -803,13 +816,9 @@ namespace lsp
         {
             float lvl;
 
-            lsp_trace("samples=%d", int(samples));
-
             for (size_t offset = 0; offset < samples; )
             {
                 const size_t to_process     = lsp_min(samples - offset, BUF_SIZE);
-
-                lsp_trace("offset=%d, to_process=%d", int(offset), int(to_process));
 
                 // Pre-process input signal
                 for (size_t i=0; i<nChannels; ++i)
@@ -942,7 +951,7 @@ namespace lsp
             set_latency(vChannels[0]->sDelay.get_delay());
 
             // Sync output mesh
-            plug::mesh_t *mesh = pMesh->buffer<plug::mesh_t>();
+            plug::mesh_t * const mesh = pMesh->buffer<plug::mesh_t>();
             if ((bSyncMesh) && (mesh != NULL) && (mesh->isEmpty()))
             {
                 // Output mesh data
