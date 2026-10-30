@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2025 Linux Studio Plugins Project <https://lsp-plug.in/>
- *           (C) 2025 Vladimir Sadovnikov <sadko4u@gmail.com>
+ * Copyright (C) 2026 Linux Studio Plugins Project <https://lsp-plug.in/>
+ *           (C) 2026 Vladimir Sadovnikov <sadko4u@gmail.com>
  *
  * This file is part of lsp-plugins-loud-comp
  * Created on: 3 авг. 2021 г.
@@ -89,6 +89,8 @@ namespace lsp
                 float                   fVolume;        // Volume
                 float                   fInLufs;        // Input LUFS
                 float                   fOutLufs;       // Output LUFS
+                float                   fOutGain;       // Output gain
+                float                   fCompGain;      // Compensation gain
                 generator_t             enGenerator;    // Generator type
                 bool                    bBypass;        // Bypass
                 bool                    bRelative;      // Display relative curve instead of absolute
@@ -129,6 +131,8 @@ namespace lsp
                 plug::IPort            *pHClipOn;       // Enable Hard clip
                 plug::IPort            *pHClipRange;    // Hard clipping range
                 plug::IPort            *pHClipReset;    // Hard clipping reset
+                plug::IPort            *pCompensate;    // Compensate gain adjustment
+                plug::IPort            *pGainMeter;     // Output gain meter
 
             protected:
                 void                update_fft_curve();
@@ -153,6 +157,7 @@ namespace lsp
                 virtual void        destroy() override;
 
             public:
+                virtual void        activated() override;
                 virtual void        ui_activated() override;
                 virtual void        update_sample_rate(long sr) override;
                 virtual void        update_settings() override;

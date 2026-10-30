@@ -2,6 +2,13 @@
 * RECENT CHANGES
 *******************************************************************************
 
+=== 1.0.36 ===
+* Added ability to configure plugin for more efficient use of the dynamics
+  headroom when the PCM stream with integral sample format is used. With
+  the 'compensate' button turned on the measured gain should be applied on an
+  analog output of the device.
+* Updated build scripts and dependencies.
+
 === 1.0.35 ===
 * Updated build scripts and dependencies.
 

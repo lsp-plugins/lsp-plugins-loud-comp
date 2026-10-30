@@ -26,7 +26,7 @@
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MAJOR       1
 #define LSP_PLUGINS_LOUD_COMP_VERSION_MINOR       0
-#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       35
+#define LSP_PLUGINS_LOUD_COMP_VERSION_MICRO       36
 
 #define LSP_PLUGINS_LOUD_COMP_VERSION  \
     LSP_MODULE_VERSION( \
@@ -39,6 +39,10 @@ namespace lsp
 {
     namespace meta
     {
+        // Different revisions
+        #define REV_0           0
+        #define REV_1           1
+
         static const int plugin_classes[]           = { C_AMPLIFIER, -1 };
         static const int clap_features_mono[]       = { CF_AUDIO_EFFECT, CF_UTILITY, CF_MONO, -1 };
         static const int clap_features_stereo[]     = { CF_AUDIO_EFFECT, CF_UTILITY, CF_STEREO, -1 };
@@ -109,7 +113,9 @@ namespace lsp
             MESH("spec", "Level compensation frequency graph", 2, loud_comp_metadata::CURVE_MESH_SIZE), \
             SWITCH("relspec", "Equalization curve is shown relative to the volume", "Rel curve", 0.0f), \
             LUFS_METER("lufs_il", "Input signal LUFS", 24.0f), \
-            LUFS_METER("lufs_ol", "Input signal LUFS", 24.0f)
+            LUFS_METER("lufs_ol", "Input signal LUFS", 24.0f), \
+            SWITCH("comp", "Compensate gain shift", "Compensate", 0.0f), \
+            ADDON_METER_GAIN20(REV_1, "gain", "Gain shift")
 
         static const port_t loud_comp_mono_ports[] =
         {

@@ -89,6 +89,15 @@
 	can be used to attenuate the overall loudness of the system while preserving equal loudness perception by the ear.   
 </p>
 
+<p>
+	Additionally this plugin provides a way to compensate the limited quantization scale of the PCM audio stream with
+	the integral sample format by applying analog gain on the audio output device. For this purpose the <b>Gain</b> meter
+	and the <b>Compensate</b> button aer provided. The <b>Gain</b> meter shows the maximum amplification/reduction gain
+	on the whole frequency range and the <b>Compensate</b> button allows to compensate this amplification/reduction to
+	use the provided by PCM dynamics headroom more efficiently. The value shown by the <b>Gain</b> meter should then be
+	applied on an analog output of the audio device.
+</p> 
+
 <p><b>Controls:</b></p>
 <ul>
 	<li><b>Bypass</b> - bypass switch, when turned on (led indicator is shining), the plugin bypasses signal.</li>
@@ -122,9 +131,19 @@
 		<li>For <b>FFT</b> mode it allows to select size of the FFT frame used for the processing. The larger FFT frame is, the more precise the curve is approximated and the more latency the plugin introduces.</li></li>
 		<li>For <b>IIR</b> mode it allows to select the number of filters and their slopes for the processing. The greater quality is set, the more filters are added and the more CPU processing is required.</li></li>
 	</ul> 
-	<li><b>Volume</b> - the output volume of the signal with applied equal loudness contour, controls the loudness of the 1 kHz pure sine wave</li>
-	<li><b>Clipping</b> - allows to enable and set the gap level for the hard clipping of the output signal</li>
-	<li><b>Reset</b> - reset leds that indicate that hard clip occurred in the clipping mode</li>
-	<li><b>Relative</b> - draws the frequency response in relative to the loudness mode when enabled</li>
+	<li><b>Volume</b> - the output volume of the signal with applied equal loudness contour, controls the loudness of the 1 kHz pure sine wave.</li>
+	<li><b>Clipping</b> - allows to enable and set the gap level for the hard clipping of the output signal.</li>
+	<li><b>Reset</b> - reset leds that indicate that hard clip occurred in the clipping mode.</li>
+	<li><b>Relative</b> - draws the frequency response in relative to the loudness mode when enabled.</li>
+	<li><b>Compensate</b> - applies additional gain to compensate the loudness raise/fall-off.</li>
+</ul>
+
+<p><b>Meters:</b></p>
+<ul>
+	<li><b>In</b> - the level of the input signal.
+	<li><b>In LUFS</b> - the loudness of the input signal in LUFS.
+	<li><b>Out</b> - the level of the output signal.
+	<li><b>Out LUFS</b> - the loudness of the output signal in LUFS.
+	<li><b>Gain</b> - the maximum amplification/reduction gain on the whole frequency range.</li>
 </ul>
 
