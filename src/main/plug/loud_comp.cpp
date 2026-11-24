@@ -507,10 +507,13 @@ namespace lsp
             for (size_t i=0; i<nChannels; ++i)
             {
                 channel_t * const c     = vChannels[i];
-                const size_t latency    = (nMode == meta::loud_comp_metadata::MODE_FFT) ? c->sProc.latency() : c->sEqualizer.get_latency();
 
                 c->sBypass.set_bypass(bypass);
+                // init() leaves the processor at FFT_RANK_MAX. Read latency()
+                // only after set_rank(), or the delay line stores the wrapped
+                // maximum (16384 % 8704 = 7680) for every FFT size.
                 c->sProc.set_rank(rank);
+                const size_t latency    = (nMode == meta::loud_comp_metadata::MODE_FFT) ? c->sProc.latency() : c->sEqualizer.get_latency();
 
                 c->sDelay.set_delay(latency);
                 if (rst_clip)
