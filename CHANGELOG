@@ -3,6 +3,7 @@
 *******************************************************************************
 
 === 1.0.37 ===
+* Fixed invalid latency report by the plugin. Contributed by Jim Phillips.
 * Updated build scripts and dependencies.
 
 === 1.0.36 ===
